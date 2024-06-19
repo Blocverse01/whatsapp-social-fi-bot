@@ -14,16 +14,28 @@ class UserService{
        try {
            const user = await this.getUser(phoneNumber);
            if (user) {
+               
+           } else {
                 await this.USER_TABLE.create({
                     'phoneNumber': phoneNumber
                 });
-           } else {
-               
            }
        } catch (error) {
             throw new HttpException(INTERNAL_SERVER_ERROR, `User not found`);
        }
    }
+    
+    async getUserByMessageId(messageId : string) {
+        const record = await this.USER_TABLE.filter({ messageId }).getFirst();
+        return record;
+    }
+
+    async markMessageProcessed(messageId: string) {
+        const record = await this.getUserByMessageId(messageId);
+        if (record) {
+            await record.update({ messageId: null });
+        }
+    }
     
     async getUser(phoneNumber: string) {
         const record = await this.USER_TABLE

@@ -7,6 +7,7 @@ import axios, { isAxiosError } from 'axios';
 import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
+import UserService from '@/User/UserService';
 
 class WhatsAppBotService{
     public static async sendWhatsappMessage(method:string ,endpoint:string, data: object) {
@@ -91,6 +92,24 @@ class WhatsAppBotService{
 
     async walletCreationConfirmationMassage() {
         
+    }
+
+    public static async isMessageProcessed(messageId: string) {
+        try {
+            const data = await UserService.getUserByMessageId(messageId);
+            return !!data;
+        } catch (error) {
+            console.error('Error checking processed messages:', error);
+        }
+    }
+
+    // Function to mark message as processed
+    public static async  markMessageProcessed(messageId: string): Promise<void> {
+        try {
+            const data = await UserService.markMessageProcessed(messageId);
+        } catch (error) {
+            console.error('Error marking message as processed:', error);
+        }
     }
 }
 
