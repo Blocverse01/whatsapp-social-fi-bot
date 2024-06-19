@@ -27,8 +27,7 @@ interface Message {
 }
 
 class UserController {
-
-    static async  userWebhook(req: Request, res: Response) {
+    public static async userWebhook(req: Request, res: Response) {
         try {
             // const {
             //         entry: [{
@@ -47,7 +46,7 @@ class UserController {
   
             console.log(`message : ${message} ---- ${business_phone_number_id}`);
             
-            await this.messageTypeCheck(message,business_phone_number_id, 'Hello');
+            await UserController.messageTypeCheck(message,business_phone_number_id, 'Hello');
 
         } catch (error:any) {
             console.log(error);
@@ -55,7 +54,7 @@ class UserController {
         }
     }
 
-   static async  userWebHookVerification(req:Request,res:Response) {
+   public static async userWebHookVerification(req:Request,res:Response) {
         const mode = req.query["hub.mode"];
         const token = req.query["hub.verify_token"];
         const challenge = req.query["hub.challenge"];
@@ -71,7 +70,7 @@ class UserController {
         }
     }
 
-    static async  messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
+    public static async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
         
         const { id, type, from, text, interactive } = message;
 

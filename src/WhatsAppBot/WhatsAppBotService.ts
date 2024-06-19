@@ -9,8 +9,7 @@ import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 
 class WhatsAppBotService{
-
-    async sendWhatsappMessage(method:string ,endpoint:string, data: object) {
+    public static async sendWhatsappMessage(method:string ,endpoint:string, data: object) {
         try {
             const requestOptions = createRequestOptions(method, endpoint, data);
              const response = await axios.post(
@@ -64,7 +63,7 @@ class WhatsAppBotService{
     //     }
     // }
 
-    async createWalletMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
+    public static async createWalletMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
@@ -103,10 +102,6 @@ class WhatsAppBotService{
     async walletCreationConfirmationMassage() {
         
     }
-
-
-   
-
 }
 
-export default new WhatsAppBotService();
+export default WhatsAppBotService;
