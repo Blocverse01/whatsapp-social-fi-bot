@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import UserService from './UserService';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
-import WhatsAppBotService from '@/BlocPal/WhatsAppBotService';
+import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 
 interface Message {
     from: string;
