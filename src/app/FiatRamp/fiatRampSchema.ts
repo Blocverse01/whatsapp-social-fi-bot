@@ -124,22 +124,19 @@ export const bankBeneficiarySchema = z.object({
 });
 
 export const mobileMoneyBeneficiarySchema = (countryCode: CountryCode) =>
-    z
-        .object({
-            firstName: z.string(),
-            lastName: z.string(),
-            networkId: z.string(),
-            channelId: z.string(),
-            id: z.string(),
-            mobileProvider: z.string(),
-            mobileProviderCode: z.string(),
-            mobileNumber: z.string(),
-            countryId: z.string(),
-        })
-        .refine((data) => isValidPhoneNumber(data.mobileNumber, countryCode), {
-            message: 'Invalid Mobile Number',
-            path: ['mobileNumber'],
-        });
+    z.object({
+        firstName: z.string(),
+        lastName: z.string(),
+        networkId: z.string(),
+        channelId: z.string(),
+        id: z.string(),
+        mobileProvider: z.string(),
+        mobileProviderCode: z.string(),
+        mobileNumber: z
+            .string()
+            .refine((data) => isValidPhoneNumber(data, countryCode), 'Invalid Mobile Number'),
+        countryId: z.string(),
+    });
 
 export const createBeneficiaryParams = (
     beneficiaryType: 'phone' | 'bank',
@@ -148,8 +145,8 @@ export const createBeneficiaryParams = (
     z.object({
         beneficiary:
             beneficiaryType === 'phone'
-                ? mobileMoneyBeneficiarySchema(countryCode)
-                : bankBeneficiarySchema,
+                ? mobileMoneyBeneficiarySchema(countryCode).omit({ id: true })
+                : bankBeneficiarySchema.omit({ id: true }),
     });
 
 export type CreateBeneficiaryParams = z.infer<ReturnType<typeof createBeneficiaryParams>>;
@@ -195,3 +192,23 @@ export const sendOfframpRequestResponseSchema = z.object({
 });
 
 export type SendOfframpRequestResponse = z.infer<typeof sendOfframpRequestResponseSchema>;
+
+export const postOfframpTransactionResponse = z.object({
+    data: z.object({
+        sequenceId: z.string(),
+    }),
+});
+
+export type PostOfframpTransactionResponse = z.infer<typeof postOfframpTransactionResponse>;
+
+export const transactionStatusSchema = z.enum(['pending', 'complete', 'failed', 'processing']);
+
+export type TransactionStatus = z.infer<typeof transactionStatusSchema>;
+
+const getTransactionStatusResponseSchema = z.object({
+    data: z.object({
+        transactionStatus: transactionStatusSchema,
+    }),
+});
+
+export type GetTransactionStatusResponse = z.infer<typeof getTransactionStatusResponseSchema>;

@@ -1,6 +1,6 @@
 export const FIAT_RAMPS = '/ramps-sdk';
 
-export const GET_SUPPORTED_CURRENCIES = FIAT_RAMPS + '/currencies';
+export const GET_SUPPORTED_CURRENCIES = FIAT_RAMPS + '/get-supported-countries';
 export const GET_TRANSACTION_FEE = FIAT_RAMPS + '/get-fee';
 export const GET_PAYMENT_CHANNELS = FIAT_RAMPS + '/get-supported-channels';
 export const GET_RATES = FIAT_RAMPS + '/get-rate';

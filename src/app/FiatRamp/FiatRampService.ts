@@ -4,14 +4,18 @@ import {
     CREATE_BENEFICIARY,
     GET_BANKS,
     GET_BENEFICIARIES,
+    GET_HOT_WALLET_ADDRESS,
     GET_MOBILE_PROVIDERS,
+    GET_OFFRAMP_TRANSACTION,
+    GET_ONRAMP_TRANSACTION,
     GET_PAYMENT_CHANNELS,
     GET_RATES,
     GET_SUPPORTED_CURRENCIES,
     GET_TRANSACTION_FEE,
+    POST_OFFRAMP,
     POST_ONRAMP,
     SEND_OFFRAMP_REQUEST,
-} from '@/app/FiatRamps/endpoints';
+} from '@/app/FiatRamp/endpoints';
 import {
     createBeneficiaryParams,
     CreateBeneficiaryParams,
@@ -23,12 +27,14 @@ import {
     GetRateResponse,
     GetSupportedBanksResponse,
     GetTransactionFeeResponse,
+    GetTransactionStatusResponse,
     OnrampTransactionPayload,
+    PostOfframpTransactionResponse,
     SendOfframpRequestPayload,
     sendOfframpRequestPayloadSchema,
     SendOfframpRequestResponse,
     SendOnrampTransactionResponse,
-} from '@/app/FiatRamps/fiatRampsSchema';
+} from '@/app/FiatRamp/fiatRampSchema';
 import { HUNDRED } from '@/constants/numbers';
 import { CountryCode } from 'libphonenumber-js';
 
@@ -117,19 +123,20 @@ class FiatRampService {
     }
 
     public static async getSupportedMobileProviders(channelId: string) {
-        const response = await axios.get<GetMobileProvidersResponse>(
-            `${GET_MOBILE_PROVIDERS}?channelId=${channelId}`,
-            {
-                headers: this.requiredRequestHeaders,
-            }
-        );
+        const requestUrl = `${this.API_URL}${GET_MOBILE_PROVIDERS}?channelId=${channelId}`;
+
+        const response = await axios.get<GetMobileProvidersResponse>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
 
         return response.data.data;
     }
 
     public static async postOnrampTransaction(transactionPayload: OnrampTransactionPayload) {
+        const requestUrl = `${this.API_URL}${POST_ONRAMP}`;
+
         const response = await axios.post<SendOnrampTransactionResponse>(
-            POST_ONRAMP,
+            requestUrl,
             transactionPayload,
             {
                 headers: this.requiredRequestHeaders,
@@ -150,8 +157,10 @@ class FiatRampService {
         };
     }
 
-    public static async getSupportedBanks() {
-        const response = await axios.get<GetSupportedBanksResponse>(GET_BANKS, {
+    public static async getSupportedBanks(channelId: string) {
+        const requestUrl = `${this.API_URL}${GET_BANKS}?channelId=${channelId}`;
+
+        const response = await axios.get<GetSupportedBanksResponse>(requestUrl, {
             headers: this.requiredRequestHeaders,
         });
 
@@ -171,12 +180,18 @@ class FiatRampService {
             beneficiary: { countryId, ...other },
         } = validatedParams;
 
-        const response = await axios.post<CreateBeneficiaryResponse>(requestUrl, {
-            ownerId,
-            accountType,
-            beneficiary: other,
-            countryId: countryId,
-        });
+        const response = await axios.post<CreateBeneficiaryResponse>(
+            requestUrl,
+            {
+                ownerId,
+                accountType,
+                beneficiary: other,
+                countryId: countryId,
+            },
+            {
+                headers: this.requiredRequestHeaders,
+            }
+        );
 
         return response.data.beneficiaryId;
     }
@@ -210,6 +225,46 @@ class FiatRampService {
         });
 
         return response.data.data.offrampRequestId;
+    }
+
+    public static async postOfframpTransaction(params: SendOfframpRequestPayload) {
+        const requestUrl = `${this.API_URL}${POST_OFFRAMP}`;
+        const validatedParams = sendOfframpRequestPayloadSchema.parse(params);
+
+        const response = await axios.post<PostOfframpTransactionResponse>(
+            requestUrl,
+            validatedParams,
+            {
+                headers: this.requiredRequestHeaders,
+            }
+        );
+
+        return response.data.data.sequenceId;
+    }
+
+    public static async getTransactionStatus(sequenceId: string, route: 'onramp' | 'offramp') {
+        const baseEndpoint = route === 'onramp' ? GET_ONRAMP_TRANSACTION : GET_OFFRAMP_TRANSACTION;
+        const requestUrl = `${this.API_URL}${baseEndpoint}?sequenceId=${sequenceId}`;
+
+        const response = await axios.get<GetTransactionStatusResponse>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
+
+        return response.data.data.transactionStatus;
+    }
+
+    public static async getHotWalletForNetwork(networkType: 'evm') {
+        const requestUrl = `${this.API_URL}${GET_HOT_WALLET_ADDRESS}?networkType=${networkType}`;
+
+        const response = await axios.get<{ data: string }>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
+
+        const hotWalletAddress = response.data.data;
+
+        if (!hotWalletAddress) throw new Error('Hot wallet address not found');
+
+        return hotWalletAddress;
     }
 }
 
