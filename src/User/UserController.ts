@@ -50,7 +50,8 @@ class UserController {
             await this.messageTypeCheck(message,business_phone_number_id, 'Hello');
 
         } catch (error:any) {
-            return res.status(error?.status ?? INTERNAL_SERVER_ERROR).json({ message: error.message });
+            console.log(error);
+            console.log(error.response.data);
         }
     }
 
