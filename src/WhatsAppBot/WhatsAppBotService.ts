@@ -3,7 +3,7 @@ import { createRequestOptions } from '@/Resources/HttpRequest';
 import {
     WhatsAppInteractiveMessage
 } from './WhatsAppBotType'
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
@@ -19,7 +19,14 @@ class WhatsAppBotService{
             );
             console.log("Message sent successfully");
         } catch (error) {
-            throw new HttpException(INTERNAL_SERVER_ERROR, `Failed to send message`);
+            let message = 'Failed to send message';
+
+            if(isAxiosError(error)) {
+                console.log({errorResponse: error.response});
+                message = error.response?.data?.message;
+            }
+
+            throw new HttpException(INTERNAL_SERVER_ERROR, message);
         }
     }
 
