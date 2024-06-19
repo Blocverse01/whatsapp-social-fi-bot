@@ -55,6 +55,7 @@ class WhatsAppBotController {
             logger.info('Original Body Received', {
                 webhookBody: req.body,
             });
+            console.log('Original Body Received', req.body);
 
             const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
 
