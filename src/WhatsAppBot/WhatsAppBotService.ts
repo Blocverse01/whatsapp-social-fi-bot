@@ -30,46 +30,6 @@ class WhatsAppBotService{
         }
     }
 
-    // getWhatsAppMessage(
-    //     type: WhatsAppMessageType,
-    //     recipient: string,
-    //     content: string | string[] | WhatsAppInteractiveMessage
-    // ) {
-    //     switch (type) {
-    //         case WhatsAppMessageType.TEXT:
-    //         return {
-    //             messaging_product: 'whatsapp',
-    //             recipient_type: 'individual',
-    //             to: recipient,
-    //             type: type,
-    //             text: {
-    //             preview_url: false,
-    //             body: content as string, 
-    //             },
-    //         };
-    //         case WhatsAppMessageType.STICKER:
-    //         return {
-    //             messaging_product: 'whatsapp',
-    //             recipient_type: 'individual',
-    //             to: recipient,
-    //             type: type,
-    //             sticker: {
-    //             id: content as string,
-    //             },
-    //         };
-    //         case WhatsAppMessageType.INTERACTIVE:
-    //         return {
-    //             messaging_product: 'whatsapp',
-    //             recipient_type: 'individual',
-    //             to: recipient,
-    //             type: type,
-    //             interactive: content as WhatsAppInteractiveMessage,
-    //         };
-    //         default:
-    //         throw new Error('Unsupported WhatsApp message type');
-    //     }
-    // }
-
     public static async createWalletMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
@@ -104,6 +64,29 @@ class WhatsAppBotService{
             to: recipient
         };
         await this.sendWhatsappMessage(method,endpoint,interactiveMessage);
+    }
+
+   public static async markMassageAsRead(businessPhoneNumberId: string, messageId : string) {
+        const method = 'POST';
+        const endpoint = `${businessPhoneNumberId}/messages`;
+        const data = {
+            messaging_product: "whatsapp",
+            status: "read",
+            message_id: messageId, // Replace with the actual message ID
+        };
+
+        // Create request options with error handling (assuming createRequestOptions doesn't handle errors)
+        try {
+            const requestOptions = createRequestOptions(method, endpoint, data);
+             const response = await axios.post(
+                `${env.CLOUD_API_URL}/${endpoint}`,
+                data,
+                requestOptions
+            );
+            console.log("Message marked as read successfully:", response.data); // Handle successful response (optional)
+        } catch (error) {
+            console.error("Error marking message as read:", error); // Handle errors
+        }
     }
 
     async walletCreationConfirmationMassage() {

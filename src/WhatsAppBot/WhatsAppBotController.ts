@@ -61,7 +61,11 @@ class WhatsAppBotController {
 
             logger.info(`message : ${message} ---- ${business_phone_number_id}`);
 
-            await WhatsAppBotController.messageTypeCheck(message,business_phone_number_id, 'Hello');
+            if (message && message.id) {
+                await WhatsAppBotController.messageTypeCheck(message,business_phone_number_id, 'Hello');
+            } else {
+                 logger.info('Message object not found');
+            }
 
         } catch (error:any) {
             console.log(error);
@@ -106,6 +110,8 @@ class WhatsAppBotController {
         const { id, type, from, text, interactive } = message;
 
         logger.info(`message : ${message} ---- ${type}`);
+
+        await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, id);
 
         if (type === "text") {
             await WhatsAppBotService.createWalletMessage(
