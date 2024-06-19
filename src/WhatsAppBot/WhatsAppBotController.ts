@@ -57,6 +57,8 @@ class WhatsAppBotController {
 
             const { message, displayName, businessPhoneNumberId } = messageParts;
 
+            const _ = message?.id ? await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, message.id) : null;
+
             logger.info('Original Body Received', {
                 webhookBody: req.body,
             });
@@ -67,9 +69,9 @@ class WhatsAppBotController {
 
             if (message && message.id) {
                 await WhatsAppBotController.messageTypeCheck(
-                    messageParts.message,
-                    messageParts.businessPhoneNumberId,
-                    messageParts.displayName
+                    message,
+                   businessPhoneNumberId,
+                   displayName
                 );
             } else {
                 logger.info('Message object not found');
@@ -122,8 +124,6 @@ class WhatsAppBotController {
         const { id, type, from, text, interactive } = message;
 
         logger.info(`message : ${message} ---- ${type}`);
-
-        await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, id);
 
         if (type === 'text') {
             await WhatsAppBotService.createWalletMessage(businessPhoneNumberId, displayName, from);
