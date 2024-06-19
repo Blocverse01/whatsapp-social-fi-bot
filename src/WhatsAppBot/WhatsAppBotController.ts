@@ -5,37 +5,47 @@ import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 
-interface WebhookRequestBody {
-    entry: [{
-        changes: [{
-            value: {
-                metadata: {
-                    phone_number_id: string
+type Message = {
+    id: string;
+    type: string;
+    from: string;
+    text: string;
+    interactive: {
+        type: string;
+        action: {
+            buttons: [
+                {
+                    reply: {
+                        id: string;
+                    };
                 },
-                messages: [{
-                    id: string,
-                    type: string,
-                    from: string,
-                    text: string,
-                    interactive: {
-                        type: string,
-                        action: {
-                            buttons: [{
-                                reply: {
-                                    id: string
-                                }
-                            }]
-                        }
-                    }
-                }],
-                contacts: [{
-                    profile: {
-                        name: string
-                    }
-                }]
-            }
-        }]
-    }],
+            ];
+        };
+    };
+}
+
+interface WebhookRequestBody {
+    entry: [
+        {
+            changes: [
+                {
+                    value: {
+                        metadata: {
+                            phone_number_id: string;
+                        };
+                        messages: [Message];
+                        contacts: [
+                            {
+                                profile: {
+                                    name: string;
+                                };
+                            },
+                        ];
+                    };
+                },
+            ];
+        },
+    ];
 }
 
 class WhatsAppBotController {
@@ -43,36 +53,31 @@ class WhatsAppBotController {
         try {
             res.sendStatus(OK);
 
-            try {
-                const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
+            const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
 
-                logger.info('Extracted message parts', {
-                    messageParts
-                });
-            } catch(error) {
-                logger.error('Failed to extract message parts', {
-                    error
-                })
-            }
+            const { message, displayName, businessPhoneNumberId } = messageParts;
 
-            logger.info('Received Whatsapp Message',{
-                webhookBody: req.body
+            logger.info('Original Body Received', {
+                webhookBody: req.body,
             });
 
-            const business_phone_number_id = req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
-            const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-
-            logger.info(`message : ${message} ---- ${business_phone_number_id}`);
+            logger.info('Extracted message parts', {
+                messageParts,
+            });
 
             if (message && message.id) {
-                await WhatsAppBotController.messageTypeCheck(message,business_phone_number_id, 'Hello');
+                await WhatsAppBotController.messageTypeCheck(
+                    messageParts.message,
+                    messageParts.businessPhoneNumberId,
+                    messageParts.displayName
+                );
             } else {
-                 logger.info('Message object not found');
+                logger.info('Message object not found');
             }
-
-        } catch (error:any) {
-            console.log(error);
-            console.log(error.response);
+        } catch (error) {
+            logger.error('Error in receiving message webhook', {
+                error
+            });
         }
     }
 
@@ -91,23 +96,27 @@ class WhatsAppBotController {
         return { businessPhoneNumberId, message, displayName };
     }
 
-    public static async messageWebHookVerification(req:Request, res:Response) {
-        const mode = req.query["hub.mode"];
-        const token = req.query["hub.verify_token"];
-        const challenge = req.query["hub.challenge"];
+    public static async messageWebHookVerification(req: Request, res: Response) {
+        const mode = req.query['hub.mode'];
+        const token = req.query['hub.verify_token'];
+        const challenge = req.query['hub.challenge'];
 
         // check the mode and token sent are correct
-        if (mode === "subscribe" && token === env.WEBHOOK_VERIFY_TOKEN) {
+        if (mode === 'subscribe' && token === env.WEBHOOK_VERIFY_TOKEN) {
             // respond with 200 OK and challenge token from the request
             res.status(200).send(challenge);
-            logger.info("Webhook verified successfully!");
+            logger.info('Webhook verified successfully!');
         } else {
             // respond with '403 Forbidden' if verify tokens do not match
             res.sendStatus(403);
         }
     }
 
-    public static async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
+    public static async messageTypeCheck(
+        message: Message,
+        businessPhoneNumberId: string,
+        displayName: string
+    ) {
         logger.info(`type of message : ${typeof message}`);
 
         const { id, type, from, text, interactive } = message;
@@ -116,24 +125,28 @@ class WhatsAppBotController {
 
         await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, id);
 
-        if (type === "text") {
-            await WhatsAppBotService.createWalletMessage(
-                businessPhoneNumberId,
-                displayName,
-                from
-            );
+        if (type === 'text') {
+            await WhatsAppBotService.createWalletMessage(businessPhoneNumberId, displayName, from);
         } else if (type === 'interactive') {
             if (interactive && interactive.type === 'button_reply') {
-                const { type: interactiveType, action: { buttons } } = interactive;
-                const [{ reply: { id: interactiveId } }] = buttons;
+                const {
+                    type: interactiveType,
+                    action: { buttons },
+                } = interactive;
+
+                const [
+                    {
+                        reply: { id: interactiveId },
+                    },
+                ] = buttons;
+
                 if (interactiveId === 'create-wallet') {
-                    await UserService.createUser(from,displayName);
+                    await UserService.createUser(from, displayName);
                 }
             } else {
-                console.log("No interactive message found or type is not 'button_reply'.");
+                logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }
-
     }
 }
 
