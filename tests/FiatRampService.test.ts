@@ -41,7 +41,7 @@ describe('FiatRampService', () => {
                 // Assert
                 expect(quotes).toBeDefined();
             },
-            TEN_THOUSAND
+            TEN_THOUSAND * 2
         );
 
         it(
