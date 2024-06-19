@@ -3,10 +3,14 @@ import env from '@/constants/env';
 import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
+import { OK } from '@/constants/status-codes';
+
 
 class WhatsAppBotController {
     public static async receiveMessageWebhook(req: Request, res: Response) {
         try {
+
+            res.sendStatus(OK)
             // const {
             //         entry: [{
             //             changes: [{
