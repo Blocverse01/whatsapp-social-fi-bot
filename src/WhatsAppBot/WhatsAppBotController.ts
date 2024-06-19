@@ -3,6 +3,7 @@ import env from '@/constants/env';
 import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
+import { OK } from '@/constants/status-codes';
 
 interface WebhookRequestBody {
     entry: [{
@@ -40,6 +41,8 @@ interface WebhookRequestBody {
 class WhatsAppBotController {
     public static async receiveMessageWebhook(req: Request, res: Response) {
         try {
+            res.sendStatus(OK);
+
             try {
                 const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
 
