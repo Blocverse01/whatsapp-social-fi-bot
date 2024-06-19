@@ -45,7 +45,7 @@ class UserController {
             const business_phone_number_id = req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
             const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
   
-            console.log(message);
+            console.log(`message : ${message} ---- ${business_phone_number_id}`);
             
             await this.messageTypeCheck(message,business_phone_number_id, 'Hello');
 
@@ -73,6 +73,8 @@ class UserController {
     async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
         
         const { id, type, from, text, interactive } = message;
+
+        console.log(`message : ${message} ---- ${type}`);
 
         if (type === "text") {
             await WhatsAppBotService.createWalletMessage(
