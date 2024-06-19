@@ -4,6 +4,39 @@ import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
 
+interface WebhookRequestBody {
+    entry: [{
+        changes: [{
+            value: {
+                metadata: {
+                    phone_number_id: string
+                },
+                messages: [{
+                    id: string,
+                    type: string,
+                    from: string,
+                    text: string,
+                    interactive: {
+                        type: string,
+                        action: {
+                            buttons: [{
+                                reply: {
+                                    id: string
+                                }
+                            }]
+                        }
+                    }
+                }],
+                contacts: [{
+                    profile: {
+                        name: string
+                    }
+                }]
+            }
+        }]
+    }],
+}
+
 class WhatsAppBotController {
     public static async receiveMessageWebhook(req: Request, res: Response) {
         try {
@@ -36,6 +69,21 @@ class WhatsAppBotController {
         }
     }
 
+    private static extractStringMessageParts(requestBody: WebhookRequestBody) {
+        const firstEntry = requestBody.entry[0];
+
+        const firstChange = firstEntry.changes[0];
+        const firstValue = firstChange.value;
+
+        const businessPhoneNumberId = firstChange.value.metadata.phone_number_id;
+
+        const message = firstChange.value.messages[0];
+
+        const displayName = firstChange.value.contacts[0].profile.name;
+
+        return { businessPhoneNumberId, message, displayName };
+    }
+
     public static async messageWebHookVerification(req:Request, res:Response) {
         const mode = req.query["hub.mode"];
         const token = req.query["hub.verify_token"];
@@ -53,6 +101,7 @@ class WhatsAppBotController {
     }
 
     public static async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
+        logger.info(`type of message : ${typeof message}`);
 
         const { id, type, from, text, interactive } = message;
 
