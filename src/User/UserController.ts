@@ -28,7 +28,7 @@ interface Message {
 
 class UserController {
 
-    async userWebhook(req: Request, res: Response) {
+    static async  userWebhook(req: Request, res: Response) {
         try {
             // const {
             //         entry: [{
@@ -51,11 +51,11 @@ class UserController {
 
         } catch (error:any) {
             console.log(error);
-            console.log(error.response.data);
+            console.log(error.response);
         }
     }
 
-    async userWebHookVerification(req:Request,res:Response) {
+   static async  userWebHookVerification(req:Request,res:Response) {
         const mode = req.query["hub.mode"];
         const token = req.query["hub.verify_token"];
         const challenge = req.query["hub.challenge"];
@@ -71,7 +71,7 @@ class UserController {
         }
     }
 
-    async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
+    static async  messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
         
         const { id, type, from, text, interactive } = message;
 
@@ -100,4 +100,4 @@ class UserController {
 }
 
 
-export default new UserController();
+export default UserController;
