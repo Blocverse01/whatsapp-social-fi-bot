@@ -31,29 +31,6 @@ class UserService{
         return !!record;
     }
 
-    async markMassageAsRead(businessPhoneNumberId: string) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
-        const data = {
-            messaging_product: "whatsapp",
-            status: "read",
-            message_id: 'ngnnng', // Replace with the actual message ID
-        };
-
-        // Create request options with error handling (assuming createRequestOptions doesn't handle errors)
-        try {
-            const requestOptions = createRequestOptions(method, endpoint, data);
-             const response = await axios.post(
-                `${env.CLOUD_API_URL}${endpoint}`,
-                data,
-                requestOptions
-            );
-            console.log("Message marked as read successfully:", response.data); // Handle successful response (optional)
-        } catch (error) {
-            console.error("Error marking message as read:", error); // Handle errors
-        }
-    }
-
 
 }
 

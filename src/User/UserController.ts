@@ -27,20 +27,9 @@ interface Message {
 }
 
 class UserController {
+    
     public static async userWebhook(req: Request, res: Response) {
         try {
-            // const {
-            //         entry: [{
-            //             changes: [{
-            //             value: {
-            //                 metadata: { phone_number_id: businessPhoneNumberId },
-            //                 messages : [message],
-            //                 contacts: [{ profile: { name: displayName = null } }]
-            //             }
-            //             }]
-            //         }]
-            // } = req.body;
-
             const business_phone_number_id = req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
             const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
   
