@@ -10,7 +10,7 @@ import {
 } from '@/app/FiatRamp/fiatRampSchema';
 import { TEN_THOUSAND } from '@/constants/numbers';
 
-describe('FiatService', () => {
+describe('FiatRampService', () => {
     describe('Core', () => {
         it('Should Get Supported Fiat Currencies', async () => {
             const supportedCurrencies = await FiatRampService.getSupportedCurrencies();
