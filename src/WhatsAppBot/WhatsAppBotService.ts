@@ -47,14 +47,7 @@ class WhatsAppBotService{
                             type: 'reply',
                             reply: {
                                 id: 'create-wallet',
-                                title: 'Yes',
-                            },
-                        },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: 'dont-create-wallet',
-                                title: 'No',
+                                title: 'Let\'s go 🚀',
                             },
                         },
                     ],
