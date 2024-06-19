@@ -41,7 +41,7 @@ class UserController {
             //             }]
             //         }]
             // } = req.body;
-            
+
             const business_phone_number_id = req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
             const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
   
@@ -70,9 +70,9 @@ class UserController {
         }
     }
 
-    async messageTypeCheck(message: Message[], businessPhoneNumberId: string, displayName : string) {
+    async messageTypeCheck(message: any, businessPhoneNumberId: string, displayName : string) {
         
-        const [{ id, type, from, text, interactive }] = message;
+        const { id, type, from, text, interactive } = message;
 
         if (type === "text") {
             await WhatsAppBotService.createWalletMessage(
@@ -90,7 +90,6 @@ class UserController {
             } else {
                 console.log("No interactive message found or type is not 'button_reply'.");
             }
-
         }
        
     }
