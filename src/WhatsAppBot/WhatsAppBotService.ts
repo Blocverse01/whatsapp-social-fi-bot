@@ -31,6 +31,69 @@ class WhatsAppBotService{
         }
     }
 
+    public static async listWalletAddressMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
+         const method = 'POST';
+        const endpoint = `${businessPhoneNumberId}/messages`;
+        const interactiveMessage: WhatsAppInteractiveMessage = {
+            type: 'interactive',
+            interactive: {
+                type: 'button',
+                body: {
+                    text: `
+                        🎉 Congrats ${displayName}, welcome aboard! 🎉
+                        We've made decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰
+                    `,
+                },
+                action: {
+                    buttons: [
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: 'create-wallet',
+                                title: 'Let\'s go 🚀',
+                            },
+                        }
+                    ],
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient
+        };
+        await this.sendWhatsappMessage(method,endpoint,interactiveMessage);
+    }
+
+     public static async walletDetailsMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
+         const method = 'POST';
+        const endpoint = `${businessPhoneNumberId}/messages`;
+        const interactiveMessage: WhatsAppInteractiveMessage = {
+            type: 'interactive',
+            interactive: {
+                type: 'button',
+                body: {
+                    text: `
+                        USDT(BASE) Balance 💰: $365 Wallet Address: 
+                    `,
+                },
+                action: {
+                    buttons: [
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: 'create-wallet',
+                                title: 'Let\'s go 🚀',
+                            },
+                        }
+                    ],
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient
+        };
+        await this.sendWhatsappMessage(method,endpoint,interactiveMessage);
+    }
+
     public static async createWalletMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
