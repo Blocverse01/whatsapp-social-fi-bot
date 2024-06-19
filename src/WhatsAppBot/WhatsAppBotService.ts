@@ -66,13 +66,13 @@ class WhatsAppBotService{
         await this.sendWhatsappMessage(method,endpoint,interactiveMessage);
     }
 
-   public static async markMassageAsRead(businessPhoneNumberId: string) {
+   public static async markMassageAsRead(businessPhoneNumberId: string, messageId : string) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const data = {
             messaging_product: "whatsapp",
             status: "read",
-            message_id: 'ngnnng', // Replace with the actual message ID
+            message_id: messageId, // Replace with the actual message ID
         };
 
         // Create request options with error handling (assuming createRequestOptions doesn't handle errors)

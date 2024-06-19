@@ -58,6 +58,8 @@ class WhatsAppBotController {
 
         logger.info(`message : ${message} ---- ${type}`);
 
+        await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, id);
+
         if (type === "text") {
             await WhatsAppBotService.createWalletMessage(
                 businessPhoneNumberId,
