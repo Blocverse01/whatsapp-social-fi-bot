@@ -30,19 +30,24 @@ class UserController {
 
     async userWebhook(req: Request, res: Response) {
         try {
-            const {
-                    entry: [{
-                        changes: [{
-                        value: {
-                            metadata: { phone_number_id: businessPhoneNumberId },
-                            messages : [message],
-                            contacts: [{ profile: { name: displayName = null } }]
-                        }
-                        }]
-                    }]
-            } = req.body;
+            // const {
+            //         entry: [{
+            //             changes: [{
+            //             value: {
+            //                 metadata: { phone_number_id: businessPhoneNumberId },
+            //                 messages : [message],
+            //                 contacts: [{ profile: { name: displayName = null } }]
+            //             }
+            //             }]
+            //         }]
+            // } = req.body;
             
-            await this.messageTypeCheck(message,businessPhoneNumberId, displayName);
+            const business_phone_number_id = req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
+            const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+  
+            console.log(message);
+            
+            await this.messageTypeCheck(message,business_phone_number_id, 'Hello');
 
         } catch (error:any) {
             return res.status(error?.status ?? INTERNAL_SERVER_ERROR).json({ message: error.message });
