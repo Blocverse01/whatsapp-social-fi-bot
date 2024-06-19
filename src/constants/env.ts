@@ -23,6 +23,7 @@ const envSchema = z.object({
     FIAT_RAMPS_PROVIDER_API_KEY: notEmptyStringSchema('FIAT_RAMPS_PROVIDER_API_KEY'),
     FIAT_RAMPS_PROVIDER_PROJECT_ID: notEmptyStringSchema('FIAT_RAMPS_PROVIDER_PROJECT_ID'),
     DEVELOPER_SECRET: notEmptyStringSchema('DEVELOPER_SECRET'),
+    WEB3_ENVIRONMENT: z.enum(['testnet', 'mainnet']).default('testnet'),
 });
 
 const env = envSchema.parse(process.env);

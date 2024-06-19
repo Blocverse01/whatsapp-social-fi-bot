@@ -142,7 +142,13 @@ class WhatsAppBotController {
                 ] = buttons;
 
                 if (interactiveId === 'create-wallet') {
-                    await UserService.createUser(from, displayName);
+                    const createdNewUser = await UserService.createUser(from, displayName);
+
+                    if (createdNewUser) {
+                        const userAssetsList = await UserService.createUserWallets(from);
+
+                        // TODO: Send message with assets lists
+                    }
                 }
             } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
