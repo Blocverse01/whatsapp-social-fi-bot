@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@logtail/node": "^0.4.21",
     "@xata.io/client": "^0.29.5",
     "axios": "^1.7.2",
     "express": "^4.19.2",

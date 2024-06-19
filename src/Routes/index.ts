@@ -1,9 +1,9 @@
 import express from 'express'
-import userRouter from "./userRoutes";
+import whatsappBotRoutes from "./whatsappBotRoutes";
 
 
 const apiRoutes = express.Router()
-    .use("/users", userRouter)
+    .use("/users", whatsappBotRoutes)
    
 
 export default apiRoutes;
