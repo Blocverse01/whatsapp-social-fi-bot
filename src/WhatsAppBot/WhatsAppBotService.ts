@@ -14,7 +14,7 @@ class WhatsAppBotService{
         try {
             const requestOptions = createRequestOptions(method, endpoint, data);
              const response = await axios.post(
-                `${env.CLOUD_API_URL}${endpoint}`,
+                `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
                 requestOptions
             );
@@ -64,7 +64,7 @@ class WhatsAppBotService{
     //     }
     // }
 
-    async createWalletMessage(businessPhoneNumberId:string,displayName: string, recipient: string) {
+    async createWalletMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
