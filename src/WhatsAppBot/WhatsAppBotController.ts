@@ -28,7 +28,11 @@ class WhatsAppBotController {
 
             logger.info(`message : ${message} ---- ${business_phone_number_id}`);
 
-            await WhatsAppBotController.messageTypeCheck(message,business_phone_number_id, 'Hello');
+            if (message.length > 0) {
+                await WhatsAppBotController.messageTypeCheck(message,business_phone_number_id, 'Hello');
+            } else {
+                 logger.info('Message object not found');
+            }
 
         } catch (error:any) {
             console.log(error);
