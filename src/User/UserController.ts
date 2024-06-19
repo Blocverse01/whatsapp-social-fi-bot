@@ -30,8 +30,6 @@ class UserController {
 
     async userWebhook(req: Request, res: Response) {
         try {
-
-             res.sendStatus(200);
             // const {
             //         entry: [{
             //             changes: [{
