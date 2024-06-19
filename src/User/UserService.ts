@@ -13,12 +13,11 @@ class UserService{
    async createUser(phoneNumber : string, displayName : string ) {
        try {
            const user = await this.getUser(phoneNumber);
-           if (user) {
-               
-           } else {
-                await this.USER_TABLE.create({
-                    'phoneNumber': phoneNumber
-                });
+
+           if (!user) {
+               await this.USER_TABLE.create({
+                   'phoneNumber': phoneNumber
+               });
            }
        } catch (error) {
             throw new HttpException(INTERNAL_SERVER_ERROR, `User not found`);
