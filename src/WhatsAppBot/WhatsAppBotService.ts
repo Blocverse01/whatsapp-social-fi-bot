@@ -79,7 +79,7 @@ class WhatsAppBotService{
         try {
             const requestOptions = createRequestOptions(method, endpoint, data);
              const response = await axios.post(
-                `${env.CLOUD_API_URL}${endpoint}`,
+                `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
                 requestOptions
             );
