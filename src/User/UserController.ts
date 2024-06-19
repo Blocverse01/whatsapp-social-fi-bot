@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import UserService from './UserService';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
+import env from '@/constants/env';
 
 interface Message {
     from: string;
@@ -45,6 +46,22 @@ class UserController {
 
         } catch (error:any) {
             return res.status(error?.status ?? INTERNAL_SERVER_ERROR).json({ message: error.message });
+        }
+    }
+
+    async userWebHookVerification(req:Request,res:Response) {
+        const mode = req.query["hub.mode"];
+        const token = req.query["hub.verify_token"];
+        const challenge = req.query["hub.challenge"];
+
+        // check the mode and token sent are correct
+        if (mode === "subscribe" && token === env.WEBHOOK_VERIFY_TOKEN) {
+            // respond with 200 OK and challenge token from the request
+            res.status(200).send(challenge);
+            console.log("Webhook verified successfully!");
+        } else {
+            // respond with '403 Forbidden' if verify tokens do not match
+            res.sendStatus(403);
         }
     }
 

@@ -7,5 +7,6 @@ const userRouter = express.Router();
 
 userRouter
     .post('/messages/webhook', UserController.userWebhook)
+    .get('/messages/webhook', UserController.userWebHookVerification)
 
 export default userRouter;
