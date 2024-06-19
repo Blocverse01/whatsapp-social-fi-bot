@@ -5,7 +5,6 @@ import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 
-
 type Message = {
     id: string;
     type: string;
@@ -23,7 +22,7 @@ type Message = {
             ];
         };
     };
-}
+};
 
 interface WebhookRequestBody {
     entry: [
@@ -53,16 +52,17 @@ class WhatsAppBotController {
     public static async receiveMessageWebhook(req: Request, res: Response) {
         try {
             res.sendStatus(OK);
+            logger.info('Original Body Received', {
+                webhookBody: req.body,
+            });
 
             const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
 
             const { message, displayName, businessPhoneNumberId } = messageParts;
 
-            const _ = message?.id ? await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, message.id) : null;
-
-            logger.info('Original Body Received', {
-                webhookBody: req.body,
-            });
+            const _ = message?.id
+                ? await WhatsAppBotService.markMassageAsRead(businessPhoneNumberId, message.id)
+                : null;
 
             logger.info('Extracted message parts', {
                 messageParts,
@@ -71,15 +71,15 @@ class WhatsAppBotController {
             if (message && message.id) {
                 await WhatsAppBotController.messageTypeCheck(
                     message,
-                   businessPhoneNumberId,
-                   displayName
+                    businessPhoneNumberId,
+                    displayName
                 );
             } else {
                 logger.info('Message object not found');
             }
         } catch (error) {
             logger.error('Error in receiving message webhook', {
-                error
+                error,
             });
         }
     }

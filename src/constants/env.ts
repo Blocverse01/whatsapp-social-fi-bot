@@ -11,7 +11,7 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(5123),
     CLOUD_API_ACCESS_TOKEN: notEmptyStringSchema('CLOUD_API_ACCESS_TOKEN'),
     WEBHOOK_VERIFY_TOKEN: notEmptyStringSchema('WEBHOOK_VERIFY_TOKEN'),
-    CLOUD_API_URL : notEmptyStringSchema('CLOUD_API_URL'),
+    CLOUD_API_URL: notEmptyStringSchema('CLOUD_API_URL'),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     LOG_TAIL_SOURCE_TOKEN: notEmptyStringSchema('LOG_TAIL_SOURCE_TOKEN'),
     WALLET_KIT_PROJECT_ID: notEmptyStringSchema('WALLET_KIT_PROJECT_ID'),
@@ -22,6 +22,7 @@ const envSchema = z.object({
     ),
     FIAT_RAMPS_PROVIDER_API_KEY: notEmptyStringSchema('FIAT_RAMPS_PROVIDER_API_KEY'),
     FIAT_RAMPS_PROVIDER_PROJECT_ID: notEmptyStringSchema('FIAT_RAMPS_PROVIDER_PROJECT_ID'),
+    DEVELOPER_SECRET: notEmptyStringSchema('DEVELOPER_SECRET'),
 });
 
 const env = envSchema.parse(process.env);
