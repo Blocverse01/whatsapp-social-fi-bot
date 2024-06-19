@@ -40,17 +40,17 @@ interface WebhookRequestBody {
 class WhatsAppBotController {
     public static async receiveMessageWebhook(req: Request, res: Response) {
         try {
-            // const {
-            //         entry: [{
-            //             changes: [{
-            //             value: {
-            //                 metadata: { phone_number_id: businessPhoneNumberId },
-            //                 messages : [message],
-            //                 contacts: [{ profile: { name: displayName = null } }]
-            //             }
-            //             }]
-            //         }]
-            // } = req.body;
+            try {
+                const messageParts = WhatsAppBotController.extractStringMessageParts(req.body);
+
+                logger.info('Extracted message parts', {
+                    messageParts
+                });
+            } catch(error) {
+                logger.error('Failed to extract message parts', {
+                    error
+                })
+            }
 
             logger.info('Received Whatsapp Message',{
                 webhookBody: req.body
