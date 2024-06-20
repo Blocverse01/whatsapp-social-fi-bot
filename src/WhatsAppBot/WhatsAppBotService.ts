@@ -125,13 +125,6 @@ class WhatsAppBotService {
                                 title: "Let's go 🚀",
                             },
                         },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: 'dummy-create-wallet',
-                                title: 'Test button',
-                            },
-                        },
                     ],
                 },
             },
