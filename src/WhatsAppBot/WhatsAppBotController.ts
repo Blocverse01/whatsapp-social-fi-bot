@@ -129,9 +129,9 @@ class WhatsAppBotController {
         logger.info(`message : ${type}`);
 
         if (type === 'text') {
-            const userWallets = await UserService.getUserWalletAssetsList(from);
-
-            if (userWallets.length > 0) {
+            const user = await UserService.getUser(from);
+            if (user) {
+                const userWallets = await UserService.getUserWalletAssetsList(from);
                 await WhatsAppBotService.listWalletAddressMessage(
                         businessPhoneNumberId,
                         displayName,
