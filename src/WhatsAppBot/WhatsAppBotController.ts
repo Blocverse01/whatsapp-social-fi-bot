@@ -6,10 +6,9 @@ import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { WhatsAppMessageType, WhatsAppTextMessage } from '@/WhatsAppBot/WhatsAppBotType';
-import { SELL_BENEFICIARY__AMOUNT_PATTERN } from '@/constants/regex';
-import WalletKitService from '@/app/WalletKit/WalletKitService';
+import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
 import { TokenNames } from '@/Resources/web3/tokens';
-import { parseUnits, toHex } from 'viem';
+import { isAxiosError } from 'axios';
 
 type Message = {
     id: string;
@@ -86,8 +85,16 @@ class WhatsAppBotController {
                 logger.info('Message object not found');
             }
         } catch (error) {
+            if (isAxiosError(error)) {
+                logger.error('Error in receiving message webhook', {
+                    errorResponse: error.response,
+                });
+
+                return;
+            }
+
             logger.error('Error in receiving message webhook', {
-                error,
+                error: JSON.stringify(error),
             });
         }
     }
@@ -218,9 +225,9 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         interactiveButtonId.split(':')[1]
                     );
-                } else if (interactiveButtonId.match(SELL_BENEFICIARY__AMOUNT_PATTERN)) {
+                } else if (interactiveButtonId.match(SELL_BENEFICIARY_AMOUNT_PATTERN)) {
                     const { sell, beneficiaryId, amount } = interactiveButtonId.match(
-                        SELL_BENEFICIARY__AMOUNT_PATTERN
+                        SELL_BENEFICIARY_AMOUNT_PATTERN
                     )?.groups as { sell: string; beneficiaryId: string; amount: string };
 
                     await WhatsAppBotController.processTransactionInDemoMode(

@@ -1,2 +1,2 @@
-export const SELL_BENEFICIARY__AMOUNT_PATTERN =
+export const SELL_BENEFICIARY_AMOUNT_PATTERN =
     /sell:(?<sell>[^|]+)\|beneficiaryId:(?<beneficiaryId>[^|]+)\|amount:(?<amount>\d+)/;
