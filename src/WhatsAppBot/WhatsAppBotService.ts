@@ -22,7 +22,7 @@ class WhatsAppBotService {
             let message = 'Failed to send message';
 
             if (isAxiosError(error)) {
-                logger.error('Error sending message', { error: error });
+                logger.error('Error sending message', { errorResponse: error.response });
                 message = error.response?.data?.message;
             }
 
