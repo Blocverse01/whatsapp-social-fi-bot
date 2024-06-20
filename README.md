@@ -1,6 +1,8 @@
 # BlocPal
 > Revolutionizing Crypto Transactions through SocialFi
 
+![Group 12299](https://github.com/Blocverse01/whatsapp-social-fi-bot/assets/67528283/4a217f6a-2e55-46a5-8496-56deb0de2e18)
+
 ## The Challenge
 1. Complexity in Using Blockchain Based Applications:
    
