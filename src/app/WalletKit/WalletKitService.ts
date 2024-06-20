@@ -131,7 +131,8 @@ class WalletKitService {
         const tokenBalances = response.data;
 
         const tokenBalance = tokenBalances.find(
-            (tokenBalance) => tokenBalance.contract_address === contractAddress
+            (tokenBalance) =>
+                tokenBalance.contract_address.toLowerCase() === contractAddress.toLowerCase()
         );
 
         return tokenBalance?.display_balance ?? '0';
