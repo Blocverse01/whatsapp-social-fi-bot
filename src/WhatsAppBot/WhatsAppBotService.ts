@@ -164,14 +164,14 @@ class WhatsAppBotService {
                             type: 'reply',
                             reply: {
                                 id: `buy:${listItemId}`,
-                                title: 'Buy',
+                                title: 'Deposit to wallet',
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
                                 id: `sell:${listItemId}`,
-                                title: 'Sell',
+                                title: 'Withdraw to bank',
                             },
                         },
                         {
@@ -245,6 +245,47 @@ class WhatsAppBotService {
         } catch (error) {
             console.error('Error marking message as read:', error); // Handle errors
         }
+    }
+
+    public static async selectAmountMessage(
+        businessPhoneNumberId: string,
+        displayName: string,
+        recipient: string
+    ) {
+        
+        const method = 'POST';
+        const endpoint = `${businessPhoneNumberId}/messages`;
+        const interactiveMessage: WhatsAppInteractiveMessage = {
+            type: 'interactive',
+            interactive: {
+                type: 'button',
+                body: {
+                    text: `How much would you like to withdraw?`,
+                },
+                action: {
+                    buttons: [
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: '5:',
+                                title: "$5",
+                            },
+                        },
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: '5:',
+                                title: "$5",
+                            },
+                        },
+                    ],
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient,
+        };
+        await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
     }
 
     async walletCreationConfirmationMassage() {}

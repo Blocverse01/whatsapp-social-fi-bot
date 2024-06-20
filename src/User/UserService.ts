@@ -27,6 +27,7 @@ class UserService {
 
             if (!user) {
                 await this.USER_TABLE.create({
+                    id : phoneNumber,
                     phoneNumber: phoneNumber,
                 });
 

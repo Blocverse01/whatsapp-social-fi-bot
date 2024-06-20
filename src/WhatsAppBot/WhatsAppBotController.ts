@@ -207,8 +207,8 @@ class WhatsAppBotController {
                 }
             } else if (interactive && interactive.type === 'list_reply') {
 
-                // const { list_reply } = interactive;
-                // const interactiveListId = list_reply?.id as string;
+                const { list_reply } = interactive;
+                const interactiveListId = list_reply?.id as string;
                 // const userAssetId = '';
 
                 // if (userAssetId.includes(interactiveListId)) {

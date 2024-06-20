@@ -294,6 +294,10 @@ class FiatRampService {
 
         return hotWalletAddress;
     }
+
+    public static async storeOffRampTemporaryTransaction() {
+            
+    }
 }
 
 export default FiatRampService;
