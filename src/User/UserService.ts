@@ -27,7 +27,7 @@ class UserService {
 
             if (!user) {
                 await this.USER_TABLE.create({
-                    id : phoneNumber,
+                    id: phoneNumber,
                     phoneNumber: phoneNumber,
                 });
 
@@ -127,10 +127,20 @@ class UserService {
         return this.computeUserWalletAssetsList(userWallets);
     }
 
-    public static async getUserAssetInfo(phoneNumber: string, assetListItemId: string) {
+    public static async getUserWalletAssetOrThrow(phoneNumber: string, assetListItemId: string) {
         const assetsList = await this.getUserWalletAssetsList(phoneNumber);
 
         const asset = assetsList.find((asset) => asset.listItemId === assetListItemId);
+
+        if (!asset) {
+            throw new HttpException(BAD_REQUEST, `Asset not found`);
+        }
+
+        return asset;
+    }
+
+    public static async getUserAssetInfo(phoneNumber: string, assetListItemId: string) {
+        const asset = await this.getUserWalletAssetOrThrow(phoneNumber, assetListItemId);
 
         if (!asset) {
             throw new HttpException(BAD_REQUEST, `Asset not found`);
@@ -150,7 +160,7 @@ class UserService {
             walletAddress: asset.walletAddress,
             listItemId: assetListItemId,
             assetName: asset.name,
-            assetNetwork : asset.network
+            assetNetwork: asset.network,
         };
     }
 }

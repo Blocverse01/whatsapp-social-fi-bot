@@ -171,6 +171,7 @@ class WhatsAppBotController {
                 const interactiveListId = list_reply?.id as string;
                 const userWalletId = ['explore-eth', 'explore-usdc-base'];
                 const userSellAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
+                const userDepositAssetIds = ['deposit:explore-eth', 'deposit:explore-usdc-base'];
 
                 if (interactiveButtonId === 'create-wallet') {
                     const createdNewUser = await UserService.createUser(from, displayName);
@@ -186,12 +187,15 @@ class WhatsAppBotController {
                         );
                     }
                 } else if (userWalletId.includes(interactiveButtonId)) {
-                    const userAssetInfo = await UserService.getUserAssetInfo(from, interactiveButtonId);
-                        await WhatsAppBotService.walletDetailsMessage(
-                            businessPhoneNumberId,
-                            from,
-                            userAssetInfo
-                        );
+                    const userAssetInfo = await UserService.getUserAssetInfo(
+                        from,
+                        interactiveButtonId
+                    );
+                    await WhatsAppBotService.walletDetailsMessage(
+                        businessPhoneNumberId,
+                        from,
+                        userAssetInfo
+                    );
                 } else if (userSellAssetId.includes(interactiveButtonId)) {
                     const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                         from,
@@ -204,9 +208,14 @@ class WhatsAppBotController {
                         from,
                         usersBeneficiaries
                     );
+                } else if (userDepositAssetIds.includes(interactiveButtonId)) {
+                    await WhatsAppBotController.depositAssetCommandHandler(
+                        from,
+                        businessPhoneNumberId,
+                        interactiveButtonId
+                    );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
-
                 const { list_reply } = interactive;
                 const interactiveListId = list_reply?.id as string;
                 // const userAssetId = '';
@@ -221,8 +230,7 @@ class WhatsAppBotController {
 
                 //     logger.info(`beneficiaries : ${usersBeneficiaries}`);
                 // }
-
-            }else {
+            } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }
@@ -239,6 +247,31 @@ class WhatsAppBotController {
             type: WhatsAppMessageType.TEXT,
             text: {
                 body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USDC\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(
+            'POST',
+            `${businessPhoneNumberId}/messages`,
+            messagePayload
+        );
+    }
+
+    public static async depositAssetCommandHandler(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string,
+        listItemId: string
+    ) {
+        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, listItemId);
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `${asset.walletAddress}`,
                 preview_url: false,
             },
             messaging_product: 'whatsapp',
