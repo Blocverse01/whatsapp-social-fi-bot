@@ -108,12 +108,12 @@ class WhatsAppBotService {
 
                                     if ((beneficiary as MobileMoneyBeneficiary).firstName) {
                                         const mobileMoneyBeneficiaryCast = beneficiary as MobileMoneyBeneficiary;
-                                        title = `${mobileMoneyBeneficiaryCast.firstName} ${mobileMoneyBeneficiaryCast.lastName}`
-                                        description = `Mobile Number: ${mobileMoneyBeneficiaryCast.firstName}`
+                                        title =`${mobileMoneyBeneficiaryCast.firstName} ${mobileMoneyBeneficiaryCast.lastName}`
+                                        description =`Mobile Number: ${mobileMoneyBeneficiaryCast.firstName}`
                                     } else {
                                         const bankBeneficiaryCast = beneficiary as BankBeneficiary;
-                                        title = `${bankBeneficiaryCast.accountName}`
-                                        description = `Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`
+                                        title =`${bankBeneficiaryCast.accountName}`
+                                        description =`Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`
                                     }
                                         return {
                                         id: `${assetId}|beneficiaryId:${beneficiary.id}`,
