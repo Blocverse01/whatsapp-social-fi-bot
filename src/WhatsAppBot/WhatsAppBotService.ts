@@ -31,7 +31,12 @@ class WhatsAppBotService{
         }
     }
 
-    public static async listWalletAddressMessage(businessPhoneNumberId:string, displayName: string, recipient: string) {
+    public static async listWalletAddressMessage(
+        businessPhoneNumberId: string,
+        displayName: string,
+        recipient: string,
+        walletsAsset : any
+    ){
          const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
@@ -45,15 +50,15 @@ class WhatsAppBotService{
                     `,
                 },
                 action: {
-                    buttons: [
+                    buttons: walletsAsset.map((asset: { listItemId: string; name : string }) => [
                         {
                             type: 'reply',
                             reply: {
-                                id: 'create-wallet',
-                                title: 'Let\'s go 🚀',
+                                id: asset?.listItemId,
+                                title: asset?.name,
                             },
                         }
-                    ],
+                    ]),
                 },
             },
             messaging_product: 'whatsapp',

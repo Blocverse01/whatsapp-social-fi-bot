@@ -147,7 +147,12 @@ class WhatsAppBotController {
                     if (createdNewUser) {
                         const userAssetsList = await UserService.createUserWallets(from);
 
-                        // TODO: Send message with assets lists
+                        await WhatsAppBotService.listWalletAddressMessage(
+                            businessPhoneNumberId,
+                            displayName,
+                            from,
+                            userAssetsList
+                        )
                     }
                 }
             } else {
