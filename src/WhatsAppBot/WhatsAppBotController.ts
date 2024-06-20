@@ -124,11 +124,12 @@ class WhatsAppBotController {
 
         const { id, type, from, text, interactive } = message;
 
-        logger.info(`message : ${message} ---- ${type}`);
+        logger.info(`message : ${type}`);
 
         if (type === 'text') {
             await WhatsAppBotService.createWalletMessage(businessPhoneNumberId, displayName, from);
         } else if (type === 'interactive') {
+             logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
             if (interactive && interactive.type === 'button_reply') {
                 const {
                     type: interactiveType,
@@ -147,7 +148,12 @@ class WhatsAppBotController {
                     if (createdNewUser) {
                         const userAssetsList = await UserService.createUserWallets(from);
 
-                        // TODO: Send message with assets lists
+                        await WhatsAppBotService.listWalletAddressMessage(
+                            businessPhoneNumberId,
+                            displayName,
+                            from,
+                            userAssetsList
+                        )
                     }
                 }
             } else {
