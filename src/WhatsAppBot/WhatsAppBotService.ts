@@ -36,16 +36,14 @@ class WhatsAppBotService {
         displayName: string,
         recipient: string,
         walletAssets: Array<UserAssetItem>,
-        accountType : string
+        accountType: string
     ) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const text =
-            accountType === 'new_account' ? 
-                ` 🎉 Congrats ${displayName}, welcome aboard! We've made decentralized wallets for 
-                    you. It's like opening a digital piggy bank! 🐷💰,
-                    click on the asset to display the wallet address and balance`
-                    : `Click on the asset to display the wallet address and balance` 
+            accountType === 'new_account'
+                ? `🎉 Congrats ${displayName}, welcome aboard!\nWe've made decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\nClick on the asset to display the wallet address and balance`
+                : `Click on the asset to display the wallet address and balance`;
 
         const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
             .map((asset) => ({
@@ -62,7 +60,7 @@ class WhatsAppBotService {
             interactive: {
                 type: 'button',
                 body: {
-                    text: text
+                    text: text,
                 },
                 action: {
                     buttons: walletAssetsButton,
