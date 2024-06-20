@@ -129,7 +129,24 @@ class WhatsAppBotController {
         logger.info(`message : ${type}`);
 
         if (type === 'text') {
-            await WhatsAppBotService.createWalletMessage(businessPhoneNumberId, displayName, from);
+            const user = await UserService.getUser(from);
+            if (user) {
+                const userWallets = await UserService.getUserWalletAssetsList(from);
+                await WhatsAppBotService.listWalletAddressMessage(
+                        businessPhoneNumberId,
+                        displayName,
+                        from,
+                        userWallets,
+                        'old_account'
+                );
+            } else {
+                await WhatsAppBotService.createWalletMessage(
+                    businessPhoneNumberId,
+                    displayName,
+                    from
+                );
+            }
+           
         } else if (type === 'interactive') {
             logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
@@ -148,7 +165,8 @@ class WhatsAppBotController {
                             businessPhoneNumberId,
                             displayName,
                             from,
-                            userAssetsList
+                            userAssetsList,
+                            'new_account'
                         );
                     }
                 }
