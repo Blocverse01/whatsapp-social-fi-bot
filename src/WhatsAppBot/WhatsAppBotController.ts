@@ -140,6 +140,7 @@ class WhatsAppBotController {
         if (type === 'text') {
             if (text.body.toLowerCase() === 'rates') {
                 await WhatsAppBotController.ratesCommandHandler(from, businessPhoneNumberId);
+                return;
             }
 
             const user = await UserService.getUser(from);
@@ -225,7 +226,7 @@ class WhatsAppBotController {
         userPhoneNumber: string,
         businessPhoneNumberId: string
     ) {
-        const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'XAF', 'UGX'];
+        const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'UGX'];
         const rates = await FiatRampService.getMultipleRates(targetCurrencies);
 
         const messagePayload: WhatsAppTextMessage = {
