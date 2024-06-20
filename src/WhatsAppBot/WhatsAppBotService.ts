@@ -75,27 +75,54 @@ class WhatsAppBotService {
 
     public static async walletDetailsMessage(
         businessPhoneNumberId: string,
-        displayName: string,
-        recipient: string
+        recipient: string,
+        userAssetInfo: {
+            usdDisplayBalance: string,
+            tokenBalance: string,
+            walletAddress: string,
+            listItemId: string,
+            assetName: string,
+            assetNetwork : string
+        }
     ) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
+        const {
+            usdDisplayBalance,
+            tokenBalance,
+            walletAddress,
+            listItemId,
+            assetName,
+            assetNetwork
+        } = userAssetInfo
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
                 type: 'button',
                 body: {
-                    text: `
-                        USDT(BASE) Balance 💰: $365 Wallet Address: 
-                    `,
+                    text: `${assetName} (${assetNetwork}) Balance 💰: ${usdDisplayBalance} \n Wallet Address: ${walletAddress}`,
                 },
                 action: {
                     buttons: [
                         {
                             type: 'reply',
                             reply: {
-                                id: 'create-wallet',
-                                title: "Let's go 🚀",
+                                id: `buy:${listItemId}`,
+                                title: "Buy",
+                            },
+                        },
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: `sell:${listItemId}`,
+                                title: "Sell",
+                            },
+                        },
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: `transfer:${listItemId}`,
+                                title: "Transfer",
                             },
                         },
                     ],

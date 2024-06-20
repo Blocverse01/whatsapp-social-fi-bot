@@ -148,6 +148,8 @@ class UserService {
             tokenBalance: tokenBalance,
             walletAddress: asset.walletAddress,
             listItemId: assetListItemId,
+            assetName: asset.name,
+            assetNetwork : asset.network
         };
     }
 }

@@ -153,7 +153,8 @@ class WhatsAppBotController {
             if (interactive && interactive.type === 'button_reply') {
                 const { button_reply } = interactive;
 
-                const interactiveId = button_reply?.id;
+                const interactiveId = button_reply?.id as string;
+                const userWalletId = ['explore-eth', 'explore-usdc-base'];
 
                 if (interactiveId === 'create-wallet') {
                     const createdNewUser = await UserService.createUser(from, displayName);
@@ -169,6 +170,15 @@ class WhatsAppBotController {
                             'new_account'
                         );
                     }
+                } else if (userWalletId.includes(interactiveId)) {
+
+                    const userAssetInfo = await UserService.getUserAssetInfo(from, interactiveId);
+                    
+                        await WhatsAppBotService.walletDetailsMessage(
+                            businessPhoneNumberId,
+                            from,
+                            userAssetInfo
+                        );
                 }
             } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
