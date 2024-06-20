@@ -222,6 +222,17 @@ class WhatsAppBotController {
                     const { sell, beneficiaryId, amount } = interactiveButtonId.match(
                         SELL_BENEFICIARY__AMOUNT_PATTERN
                     )?.groups as { sell: string; beneficiaryId: string; amount: string };
+
+                    await WhatsAppBotController.processTransactionInDemoMode(
+                        from,
+                        businessPhoneNumberId,
+                        {
+                            assetId: sell,
+                            beneficiaryId,
+                            usdAmount: amount,
+                        }
+                    );
+                    return;
                 }
             } else if (interactive && interactive.type === 'list_reply') {
                 const { list_reply } = interactive;
