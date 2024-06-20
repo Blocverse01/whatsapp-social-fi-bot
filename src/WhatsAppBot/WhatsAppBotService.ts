@@ -5,6 +5,7 @@ import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import UserService from '@/User/UserService';
+import logger from '@/Resources/logger';
 
 class WhatsAppBotService {
     public static async sendWhatsappMessage(method: string, endpoint: string, data: object) {
@@ -15,12 +16,13 @@ class WhatsAppBotService {
                 data,
                 requestOptions
             );
-            console.log('Message sent successfully');
+
+            logger.info('Message sent successfully');
         } catch (error) {
             let message = 'Failed to send message';
 
             if (isAxiosError(error)) {
-                console.log({ errorResponse: error.response });
+                logger.error('Error sending message', { error: error });
                 message = error.response?.data?.message;
             }
 
