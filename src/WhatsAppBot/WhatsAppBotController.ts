@@ -11,14 +11,16 @@ type Message = {
     id: string;
     type: string;
     from: string;
-    text: string;
+    text: {
+        body: string;
+    };
     interactive: {
         type: 'button_reply' | 'list_reply';
-         list_reply?: {
-             id: string;
-             title: string;
-             description: string;
-        },
+        list_reply?: {
+            id: string;
+            title: string;
+            description: string;
+        };
         button_reply?: {
             id: string;
             title: string;
@@ -136,7 +138,7 @@ class WhatsAppBotController {
         logger.info(`message : ${type}`);
 
         if (type === 'text') {
-            if (text.toLowerCase() === 'rates') {
+            if (text.body.toLowerCase() === 'rates') {
                 await WhatsAppBotController.ratesCommandHandler(from);
             }
 
@@ -182,23 +184,23 @@ class WhatsAppBotController {
                         );
                     }
                 } else if (userWalletId.includes(interactiveButtonId)) {
+                    const userAssetInfo = await UserService.getUserAssetInfo(
+                        from,
+                        interactiveButtonId
+                    );
 
-                    const userAssetInfo = await UserService.getUserAssetInfo(from, interactiveButtonId);
-                    
-                        await WhatsAppBotService.walletDetailsMessage(
-                            businessPhoneNumberId,
-                            from,
-                            userAssetInfo
-                        );
+                    await WhatsAppBotService.walletDetailsMessage(
+                        businessPhoneNumberId,
+                        from,
+                        userAssetInfo
+                    );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
-
                 const { list_reply } = interactive;
                 const interactiveListId = list_reply?.id as string;
-                 const userAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
+                const userAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
 
                 if (userAssetId.includes(interactiveListId)) {
-
                     const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                         from,
                         'NG',
@@ -211,10 +213,9 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         from,
                         usersBeneficiaries
-                    )
+                    );
                 }
-
-            }else {
+            } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }
