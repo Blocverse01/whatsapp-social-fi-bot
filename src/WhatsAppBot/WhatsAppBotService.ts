@@ -6,6 +6,7 @@ import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
+import { UserAssetItem } from '@/User/userSchema';
 
 class WhatsAppBotService {
     public static async sendWhatsappMessage(method: string, endpoint: string, data: object) {
@@ -34,7 +35,7 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         displayName: string,
         recipient: string,
-        walletsAsset: any
+        walletsAsset: Array<UserAssetItem>
     ) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
@@ -49,15 +50,13 @@ class WhatsAppBotService {
                     `,
                 },
                 action: {
-                    buttons: walletsAsset.map((asset: { listItemId: string; name: string }) => [
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: asset?.listItemId,
-                                title: asset?.name,
-                            },
+                    buttons: walletsAsset.map((asset) => ({
+                        type: 'reply',
+                        reply: {
+                            id: asset.listItemId,
+                            title: asset.name,
                         },
-                    ]),
+                    })),
                 },
             },
             messaging_product: 'whatsapp',
