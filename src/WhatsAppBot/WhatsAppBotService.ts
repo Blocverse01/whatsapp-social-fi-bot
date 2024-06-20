@@ -77,7 +77,8 @@ class WhatsAppBotService {
     public static async listBeneficiaryMessage(
         businessPhoneNumberId: string,
         recipient: string,
-        usersBeneficiaries : UsersBeneficiaries
+        usersBeneficiaries: UsersBeneficiaries,
+        assetId : string
     ) {
 
         const method = 'POST';
@@ -115,7 +116,7 @@ class WhatsAppBotService {
                                         description = `Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`
                                     }
                                         return {
-                                        id: `beneficiaryId:${beneficiary.id}`,
+                                        id: `${assetId}|beneficiaryId:${beneficiary.id}`,
                                         title: title,
                                         description : description
                                     }
@@ -249,8 +250,8 @@ class WhatsAppBotService {
 
     public static async selectAmountMessage(
         businessPhoneNumberId: string,
-        displayName: string,
-        recipient: string
+        recipient: string,
+        beneficiaryId : string
     ) {
         
         const method = 'POST';
@@ -267,15 +268,22 @@ class WhatsAppBotService {
                         {
                             type: 'reply',
                             reply: {
-                                id: '5:',
+                                id: `${beneficiaryId}|amount:2`,
                                 title: "$5",
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
-                                id: '5:',
+                                id: `${beneficiaryId}|amount:5`,
                                 title: "$5",
+                            },
+                        },
+                        {
+                            type: 'reply',
+                            reply: {
+                                id: `${beneficiaryId}|amount:10`,
+                                title: "$10",
                             },
                         },
                     ],

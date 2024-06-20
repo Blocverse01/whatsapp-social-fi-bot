@@ -37,9 +37,11 @@ import {
 } from '@/app/FiatRamp/fiatRampSchema';
 import { HUNDRED } from '@/constants/numbers';
 import { CountryCode } from 'libphonenumber-js';
+import { dbClient } from '@/Db/dbClient';
 
 class FiatRampService {
     private static API_URL = env.FIAT_RAMPS_PROVIDER_API_URL;
+    private static OFF_RAMP_TEMPORARY_TRANSACTION = dbClient.OffRampTemporaryTransaction;
 
     public static get requiredRequestHeaders() {
         return {
@@ -295,8 +297,37 @@ class FiatRampService {
         return hotWalletAddress;
     }
 
-    public static async storeOffRampTemporaryTransaction() {
+    public static async storeOffRampTemporaryTransaction(
+        userId: string,
+        usdAmount: number,
+        beneficiaryId : number
+    ) {
             
+        const data = await this.getOffRampTemporaryTransaction(userId);
+
+        if (data) {
+            //  const record = this.OFF_RAMP_TEMPORARY_TRANSACTION.create({
+            //      "beneficiaryId": beneficiaryId,
+            //      "usdAmount": usdAmount,
+                 
+            //  });
+            // await this.OFF_RAMP_TEMPORARY_TRANSACTION.create({
+            //     beneficiaryId: "string",
+            //     user: "rec_xyz",
+            //     usdAmount: 2.5,
+            //     status: "string",
+            // });
+        }
+           
+    }
+
+    public static async getOffRampTemporaryTransaction(userId:string) {
+        const record = this.OFF_RAMP_TEMPORARY_TRANSACTION.filter({
+            'user.id': userId,
+            $any: [{ status: "failed" }, { status: "complete" }]
+        }).getFirst();
+
+        return !!record;
     }
 }
 

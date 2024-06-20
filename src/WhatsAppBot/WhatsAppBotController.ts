@@ -202,25 +202,22 @@ class WhatsAppBotController {
                     await WhatsAppBotService.listBeneficiaryMessage(
                         businessPhoneNumberId,
                         from,
-                        usersBeneficiaries
+                        usersBeneficiaries,
+                        'interactiveButtonId'
                     );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
 
                 const { list_reply } = interactive;
                 const interactiveListId = list_reply?.id as string;
-                // const userAssetId = '';
 
-                // if (userAssetId.includes(interactiveListId)) {
-
-                //     const usersBeneficiaries = await FiatRampService.getBeneficiaries(
-                //         from,
-                //         'NG',
-                //         'bank'
-                //     );
-
-                //     logger.info(`beneficiaries : ${usersBeneficiaries}`);
-                // }
+                logger.info(`off-ramp-data : ${interactiveListId}`);
+                
+                await WhatsAppBotService.selectAmountMessage(
+                    businessPhoneNumberId,
+                    from ,
+                    interactiveListId
+                )
 
             }else {
                 logger.info("No interactive message found or type is not 'button_reply'.");

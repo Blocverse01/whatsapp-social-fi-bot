@@ -13,6 +13,15 @@ const tables = [
       { name: "phoneNumber", type: "string" },
       { name: "messageId", type: "string" },
     ],
+    revLinks: [{ column: "user", table: "OffRampTemporaryTransaction" }],
+  },
+  {
+    name: "OffRampTemporaryTransaction",
+    columns: [
+      { name: "beneficiaryId", type: "string" },
+      { name: "user", type: "link", link: { table: "User" } },
+      { name: "usdAmount", type: "float" },
+    ],
   },
 ] as const;
 
@@ -22,8 +31,14 @@ export type InferredTypes = SchemaInference<SchemaTables>;
 export type User = InferredTypes["User"];
 export type UserRecord = User & XataRecord;
 
+export type OffRampTemporaryTransaction =
+  InferredTypes["OffRampTemporaryTransaction"];
+export type OffRampTemporaryTransactionRecord = OffRampTemporaryTransaction &
+  XataRecord;
+
 export type DatabaseSchema = {
   User: UserRecord;
+  OffRampTemporaryTransaction: OffRampTemporaryTransactionRecord;
 };
 
 const DatabaseClient = buildClient();
