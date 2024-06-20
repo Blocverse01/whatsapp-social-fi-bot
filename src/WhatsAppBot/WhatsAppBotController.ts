@@ -192,7 +192,7 @@ class WhatsAppBotController {
                             from,
                             userAssetInfo
                         );
-                } else if (userSellAssetId.includes(interactiveListId)) {
+                } else if (userSellAssetId.includes(interactiveButtonId)) {
                     const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                         from,
                         'NG',
@@ -207,8 +207,8 @@ class WhatsAppBotController {
                 }
             } else if (interactive && interactive.type === 'list_reply') {
 
-                // const { list_reply } = interactive;
-                // const interactiveListId = list_reply?.id as string;
+                const { list_reply } = interactive;
+                const interactiveListId = list_reply?.id as string;
                 // const userAssetId = '';
 
                 // if (userAssetId.includes(interactiveListId)) {
