@@ -17,6 +17,8 @@ import {
 } from '@/Resources/web3/tokens';
 import { Users } from 'walletkit-js/api/resources/users/client/Client';
 import { Wallet } from 'walletkit-js/serialization';
+import FiatRampService from '@/app/FiatRamp/FiatRampService';
+import { parseUnits, toHex } from 'viem';
 
 class UserService {
     private static USER_TABLE = dbClient.User;
@@ -162,6 +164,61 @@ class UserService {
             assetName: asset.name,
             assetNetwork: asset.network,
         };
+    }
+
+    public static async sendUserAssetForOfframp(
+        asset: UserAssetItem,
+        usdAmount: string,
+        decimals: number
+    ) {
+        const hotWalletAddress = await FiatRampService.getHotWalletForNetwork('evm');
+
+        const transactionResponse = await WalletKitService.transferToken({
+            network: asset.network,
+            developer_secret: env.DEVELOPER_SECRET,
+            from: asset.walletAddress,
+            token: asset.tokenAddress,
+            recipient: hotWalletAddress,
+            amount: toHex(parseUnits(usdAmount, decimals)),
+        });
+
+        return { transactionId: transactionResponse.transaction_id, hotWalletAddress };
+    }
+
+    public static async processOfframpTransactionInDemoMode(
+        onChainTransactionId: string,
+        params: {
+            beneficiaryId: string;
+            usdAmount: string;
+            localAmount: string;
+            tokenAddress: string;
+            hotWalletAddress: string;
+            chainName: string;
+            tokenName: string;
+            userWalletAddress: string;
+        }
+    ) {
+        const transactionDetails = await WalletKitService.getTransactionById(onChainTransactionId);
+
+        if (transactionDetails.status === 'submitted') {
+            setTimeout(() => {
+                this.processOfframpTransactionInDemoMode(onChainTransactionId, params);
+            }, 10000);
+        }
+
+        if (transactionDetails.status === 'success' && transactionDetails.transaction_hash) {
+            await FiatRampService.postOfframpTransaction({
+                usdAmount: Number(params.usdAmount),
+                localAmount: Number(params.localAmount),
+                txHash: transactionDetails.transaction_hash,
+                beneficiaryId: params.beneficiaryId,
+                tokenAddress: params.tokenAddress,
+                chainName: params.chainName,
+                tokenName: params.tokenName,
+                userWalletAddress: params.userWalletAddress,
+                hotWalletAddress: params.hotWalletAddress,
+            });
+        }
     }
 }
 

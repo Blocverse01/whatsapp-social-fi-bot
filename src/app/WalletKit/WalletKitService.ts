@@ -99,7 +99,7 @@ class WalletKitService {
         return response.data;
     }
 
-    public static async getTransactionStatusById(transactionId: string) {
+    public static async getTransactionById(transactionId: string) {
         const requestQueryParams = new URLSearchParams({
             id: transactionId,
         });

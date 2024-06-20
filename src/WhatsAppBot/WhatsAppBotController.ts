@@ -7,6 +7,9 @@ import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { WhatsAppMessageType, WhatsAppTextMessage } from '@/WhatsAppBot/WhatsAppBotType';
 import { SELL_BENEFICIARY__AMOUNT_PATTERN } from '@/constants/regex';
+import WalletKitService from '@/app/WalletKit/WalletKitService';
+import { TokenNames } from '@/Resources/web3/tokens';
+import { parseUnits, toHex } from 'viem';
 
 type Message = {
     id: string;
@@ -219,10 +222,6 @@ class WhatsAppBotController {
                     const { sell, beneficiaryId, amount } = interactiveButtonId.match(
                         SELL_BENEFICIARY__AMOUNT_PATTERN
                     )?.groups as { sell: string; beneficiaryId: string; amount: string };
-
-                    logger.info(
-                        `sell : ${sell}, beneficiaryId : ${beneficiaryId}, amount : ${amount}`
-                    );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
                 const { list_reply } = interactive;
@@ -289,6 +288,60 @@ class WhatsAppBotController {
             `${businessPhoneNumberId}/messages`,
             messagePayload
         );
+    }
+
+    public static async processTransactionInDemoMode(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string,
+        params: { assetId: string; beneficiaryId: string; usdAmount: string }
+    ) {
+        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, params.assetId);
+
+        // Can only offramp USDC in demo mode
+        if (asset.name !== TokenNames.USDC_BASE) {
+            return;
+        }
+
+        const quote = await FiatRampService.getQuotes('NGN', 'NG', 'offramp');
+
+        const numericUsdAmount = parseFloat(params.usdAmount);
+        const fiatAmountToReceive = (quote.rate * numericUsdAmount).toFixed(2);
+
+        const cryptoAmountToDebit = (numericUsdAmount + numericUsdAmount * quote.fee).toFixed(2);
+
+        const { transactionId, hotWalletAddress } = await UserService.sendUserAssetForOfframp(
+            asset,
+            cryptoAmountToDebit,
+            6
+        );
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `??Processing Bank Account Withdrawal\n\nAsset:${asset.name}\nAmount: ${cryptoAmountToDebit} USDC\nEquivalent: ${fiatAmountToReceive} NGN\nTransaction ID: ${transactionId}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(
+            'POST',
+            `${businessPhoneNumberId}/messages`,
+            messagePayload
+        );
+
+        await UserService.processOfframpTransactionInDemoMode(transactionId, {
+            beneficiaryId: params.beneficiaryId,
+            usdAmount: cryptoAmountToDebit,
+            localAmount: fiatAmountToReceive,
+            tokenAddress: asset.tokenAddress,
+            hotWalletAddress: hotWalletAddress,
+            chainName: asset.network.toUpperCase(),
+            tokenName: 'USDC',
+            userWalletAddress: asset.walletAddress,
+        });
     }
 }
 

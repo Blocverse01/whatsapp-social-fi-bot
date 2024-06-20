@@ -51,7 +51,7 @@ describe('WalletKitService', () => {
     });
 
     it('should get transaction status by id successfully', async () => {
-        const response = await WalletKitService.getTransactionStatusById(
+        const response = await WalletKitService.getTransactionById(
             'a15ffcf6-0f01-42c8-a601-d2b351272df1'
         );
 
