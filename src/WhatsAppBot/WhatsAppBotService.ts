@@ -83,7 +83,7 @@ class WhatsAppBotService {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
 
-        const intertractiveListMessage = {
+        const interactiveMessageList = {
             messaging_product: "whatsapp",
             recipient_type: "individual",
             to: recipient,
@@ -123,7 +123,7 @@ class WhatsAppBotService {
             }
         }
 
-        await this.sendWhatsappMessage(method, endpoint, intertractiveListMessage);
+        await this.sendWhatsappMessage(method, endpoint, interactiveMessageList);
     }
 
     public static async walletDetailsMessage(

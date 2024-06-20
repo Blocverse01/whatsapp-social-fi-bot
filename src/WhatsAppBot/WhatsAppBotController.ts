@@ -191,7 +191,7 @@ class WhatsAppBotController {
                             from,
                             userAssetInfo
                         );
-                } else if (userSellAssetId.includes(interactiveListId)) {
+                } else if (userSellAssetId.includes(interactiveButtonId)) {
                     const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                         from,
                         'NG',
