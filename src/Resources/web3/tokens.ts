@@ -1,4 +1,5 @@
 import env from '@/constants/env';
+import { DUMMY_ETH_PRICE, DUMMY_MATIC_PRICE, DUMMY_USD_PRICE } from '@/constants/numbers';
 
 export enum TokenAddresses {
     USDT_MATIC_MAINNET = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
@@ -21,6 +22,7 @@ export const usdtPolygonConfig = {
             : TokenAddresses.USDT_MATIC_MAINNET,
     tokenName: TokenNames.USDT_MATIC,
     listItemId: 'explore-usdt-polygon',
+    network: 'Polygon' as const,
 };
 export const usdcBaseConfig = {
     tokenAddress:
@@ -29,12 +31,32 @@ export const usdcBaseConfig = {
             : TokenAddresses.USDC_BASE_MAINNET,
     tokenName: TokenNames.USDC_BASE,
     listItemId: 'explore-usdc-base',
+    network: 'Base' as const,
 };
 export const maticConfig = {
     tokenName: TokenNames.MATIC,
     listItemId: 'explore-matic',
+    tokenAddress: 'MATIC',
+    network: 'Polygon' as const,
 };
 export const ethConfig = {
     tokenName: TokenNames.ETH,
     listItemId: 'explore-eth',
+    tokenAddress: 'ETH',
+    network: 'Base' as const,
+};
+
+export const getDummyUsdValue = (tokenName: TokenNames) => {
+    switch (tokenName) {
+        case TokenNames.USDT_MATIC:
+            return DUMMY_USD_PRICE;
+        case TokenNames.USDC_BASE:
+            return DUMMY_USD_PRICE;
+        case TokenNames.MATIC:
+            return DUMMY_MATIC_PRICE;
+        case TokenNames.ETH:
+            return DUMMY_ETH_PRICE;
+        default:
+            return 0.0;
+    }
 };

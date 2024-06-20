@@ -10,8 +10,10 @@ import {
     SupportedChain,
     transferTokenParams,
     TransferTokenParams,
+    TokenBalancesResponse,
 } from '@/app/WalletKit/walletKitSchema';
 import {
+    GET_TOKEN_BALANCES,
     GET_WALLET_BY_OWNER_ID,
     SIGN_AND_SEND_TRANSACTION,
     TRANSACTION_STATUS_BY_ID,
@@ -108,6 +110,31 @@ class WalletKitService {
         });
 
         return response.data;
+    }
+
+    public static async getBalance(
+        walletAddress: string,
+        network: SupportedChain,
+        contractAddress: string
+    ) {
+        const requestQueryParams = new URLSearchParams({
+            wallet_address: walletAddress,
+            network,
+        });
+
+        const requestUrl = `${this.API_URL}${GET_TOKEN_BALANCES}?${requestQueryParams.toString()}`;
+
+        const response = await axios.get<TokenBalancesResponse>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
+
+        const tokenBalances = response.data;
+
+        const tokenBalance = tokenBalances.find(
+            (tokenBalance) => tokenBalance.contract_address === contractAddress
+        );
+
+        return tokenBalance?.display_balance ?? '0';
     }
 }
 

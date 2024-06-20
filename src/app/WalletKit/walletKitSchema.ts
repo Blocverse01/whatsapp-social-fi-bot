@@ -69,3 +69,20 @@ export const transferTokenParams = z.object({
 });
 
 export type TransferTokenParams = z.infer<typeof transferTokenParams>;
+
+export const tokenBalanceResponseItem = z.object({
+    uuid: z.string(),
+    network: z.string(),
+    contract_address: z.string(),
+    name: z.string(),
+    symbol: z.string(),
+    decimals: z.number(),
+    display_decimals: z.number(),
+    logo_url: z.string(),
+    raw_balance: z.string(),
+    display_balance: z.string(),
+});
+
+export const tokenBalancesResponse = z.array(tokenBalanceResponseItem);
+
+export type TokenBalancesResponse = z.infer<typeof tokenBalancesResponse>;

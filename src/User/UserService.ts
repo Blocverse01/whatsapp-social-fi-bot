@@ -7,8 +7,16 @@ import axios from 'axios';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
 import { UserAssetItem } from '@/User/userSchema';
-import { ethConfig, maticConfig, usdcBaseConfig, usdtPolygonConfig } from '@/Resources/web3/tokens';
+import {
+    ethConfig,
+    getDummyUsdValue,
+    maticConfig,
+    TokenNames,
+    usdcBaseConfig,
+    usdtPolygonConfig,
+} from '@/Resources/web3/tokens';
 import { Users } from 'walletkit-js/api/resources/users/client/Client';
+import { Wallet } from 'walletkit-js/serialization';
 
 class UserService {
     private static USER_TABLE = dbClient.User;
@@ -79,11 +87,14 @@ class UserService {
                       walletAddress: polygonWallet.address,
                       name: usdtPolygonConfig.tokenName,
                       tokenAddress: usdtPolygonConfig.tokenAddress,
+                      network: usdtPolygonConfig.network,
                   },
                   {
                       listItemId: maticConfig.listItemId,
                       walletAddress: polygonWallet.address,
                       name: maticConfig.tokenName,
+                      tokenAddress: maticConfig.tokenAddress,
+                      network: maticConfig.network,
                   },
               ]
             : [];
@@ -94,11 +105,14 @@ class UserService {
                       walletAddress: baseWallet.address,
                       name: usdcBaseConfig.tokenName,
                       tokenAddress: usdcBaseConfig.tokenAddress,
+                      network: usdcBaseConfig.network,
                   },
                   {
                       listItemId: ethConfig.listItemId,
                       walletAddress: baseWallet.address,
                       name: ethConfig.tokenName,
+                      tokenAddress: ethConfig.tokenAddress,
+                      network: ethConfig.network,
                   },
               ]
             : [];
@@ -112,14 +126,29 @@ class UserService {
         return this.computeUserWalletAssetsList(userWallets);
     }
 
-    public static async getUserAssetInfo(listWalletId: string) {
-        const assetsList = await this.getUserWalletAssetsList(listWalletId);
+    public static async getUserAssetInfo(phoneNumber: string, assetListItemId: string) {
+        const assetsList = await this.getUserWalletAssetsList(phoneNumber);
 
-        const asset = assetsList.find((asset) => asset.listItemId === listWalletId);
+        const asset = assetsList.find((asset) => asset.listItemId === assetListItemId);
 
         if (!asset) {
             throw new HttpException(BAD_REQUEST, `Asset not found`);
         }
+
+        const tokenBalance = await WalletKitService.getBalance(
+            asset.walletAddress,
+            asset.network,
+            asset.tokenAddress
+        );
+
+        const usdBalance = getDummyUsdValue(asset.name as TokenNames) * parseFloat(tokenBalance);
+
+        return {
+            usdDisplayBalance: `$${usdBalance.toFixed(3)}`,
+            tokenBalance: tokenBalance,
+            walletAddress: asset.walletAddress,
+            listItemId: assetListItemId,
+        };
     }
 }
 
