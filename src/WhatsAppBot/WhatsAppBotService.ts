@@ -269,7 +269,7 @@ class WhatsAppBotService {
                             type: 'reply',
                             reply: {
                                 id: `${beneficiaryId}|amount:2`,
-                                title: "$5",
+                                title: "$2",
                             },
                         },
                         {
