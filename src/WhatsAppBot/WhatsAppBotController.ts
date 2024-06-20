@@ -329,8 +329,7 @@ class WhatsAppBotController {
 
         const { transactionId, hotWalletAddress } = await UserService.sendUserAssetForOfframp(
             asset,
-            cryptoAmountToDebit,
-            6
+            cryptoAmountToDebit
         );
 
         const messagePayload: WhatsAppTextMessage = {

@@ -166,11 +166,7 @@ class UserService {
         };
     }
 
-    public static async sendUserAssetForOfframp(
-        asset: UserAssetItem,
-        usdAmount: string,
-        decimals: number
-    ) {
+    public static async sendUserAssetForOfframp(asset: UserAssetItem, usdAmount: string) {
         const hotWalletAddress = await FiatRampService.getHotWalletForNetwork('evm');
 
         const transactionResponse = await WalletKitService.transferToken({
@@ -179,7 +175,7 @@ class UserService {
             from: asset.walletAddress,
             token: asset.tokenAddress,
             recipient: hotWalletAddress,
-            amount: toHex(parseUnits(usdAmount, decimals)),
+            amount: usdAmount,
         });
 
         return { transactionId: transactionResponse.transaction_id, hotWalletAddress };
