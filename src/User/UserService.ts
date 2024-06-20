@@ -1,4 +1,4 @@
-import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { dbClient } from '@/Db/dbClient';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import env from '@/constants/env';
@@ -110,6 +110,16 @@ class UserService {
         const userWallets = await WalletKitService.getUserWallets(phoneNumber);
 
         return this.computeUserWalletAssetsList(userWallets);
+    }
+
+    public static async getUserAssetInfo(listWalletId: string) {
+        const assetsList = await this.getUserWalletAssetsList(listWalletId);
+
+        const asset = assetsList.find((asset) => asset.listItemId === listWalletId);
+
+        if (!asset) {
+            throw new HttpException(BAD_REQUEST, `Asset not found`);
+        }
     }
 }
 
