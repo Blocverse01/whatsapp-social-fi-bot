@@ -10,3 +10,10 @@ export const userAssetSchema = z.object({
 });
 
 export type UserAssetItem = z.infer<typeof userAssetSchema>;
+
+export const userAssetInfoSchema = z.object({
+    usdDisplayBalance: z.number(),
+    tokenBalance: z.string(),
+    walletAddress: z.string(),
+    listItemId : z.string()
+}) 
