@@ -11,15 +11,10 @@ type Message = {
     from: string;
     text: string;
     interactive: {
-        type: string;
-        action: {
-            buttons: [
-                {
-                    reply: {
-                        id: string;
-                    };
-                },
-            ];
+        type: 'button_reply';
+        button_reply?: {
+            id: string;
+            title: string;
         };
     };
 };
@@ -68,7 +63,7 @@ class WhatsAppBotController {
                 messageParts,
             });
 
-            if (message && message.id) {
+            if (message && message.id && businessPhoneNumberId && displayName) {
                 await WhatsAppBotController.messageTypeCheck(
                     message,
                     businessPhoneNumberId,
@@ -85,16 +80,23 @@ class WhatsAppBotController {
     }
 
     private static extractStringMessageParts(requestBody: WebhookRequestBody) {
-        const firstEntry = requestBody.entry[0];
+        const firstEntry = requestBody.entry![0] ?? undefined;
 
-        const firstChange = firstEntry.changes[0];
-        const firstValue = firstChange.value;
+        const firstChange = firstEntry?.changes![0];
 
-        const businessPhoneNumberId = firstChange.value.metadata.phone_number_id;
+        const firstChangeValue = firstChange?.value;
 
-        const message = firstChange.value.messages[0];
+        if (!firstChangeValue) {
+            logger.info('Un-extracted request body', requestBody);
 
-        const displayName = firstChange.value.contacts[0].profile.name;
+            return {};
+        }
+
+        const businessPhoneNumberId = firstChangeValue.metadata.phone_number_id;
+
+        const message = firstChangeValue.messages[0];
+
+        const displayName = firstChangeValue.contacts[0].profile.name;
 
         return { businessPhoneNumberId, message, displayName };
     }
@@ -129,18 +131,12 @@ class WhatsAppBotController {
         if (type === 'text') {
             await WhatsAppBotService.createWalletMessage(businessPhoneNumberId, displayName, from);
         } else if (type === 'interactive') {
-             logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
-            if (interactive && interactive.type === 'button_reply') {
-                const {
-                    type: interactiveType,
-                    action: { buttons },
-                } = interactive;
+            logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
-                const [
-                    {
-                        reply: { id: interactiveId },
-                    },
-                ] = buttons;
+            if (interactive && interactive.type === 'button_reply') {
+                const { button_reply } = interactive;
+
+                const interactiveId = button_reply?.id;
 
                 if (interactiveId === 'create-wallet') {
                     const createdNewUser = await UserService.createUser(from, displayName);
@@ -153,7 +149,7 @@ class WhatsAppBotController {
                             displayName,
                             from,
                             userAssetsList
-                        )
+                        );
                     }
                 }
             } else {
