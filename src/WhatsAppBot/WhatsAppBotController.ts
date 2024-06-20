@@ -136,7 +136,8 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         displayName,
                         from,
-                        userWallets
+                        userWallets,
+                        'old_account'
                 );
             } else {
                 await WhatsAppBotService.createWalletMessage(
@@ -164,7 +165,8 @@ class WhatsAppBotController {
                             businessPhoneNumberId,
                             displayName,
                             from,
-                            userAssetsList
+                            userAssetsList,
+                            'new_account'
                         );
                     }
                 }
