@@ -203,14 +203,18 @@ describe('FiatRampService', () => {
             },
             TEN_THOUSAND * 2
         );
-        it('Should get users beneficiaries', async () => {
-            const ownerId = '2348143100808';
-            const beneficiaries = await FiatRampService.getBeneficiaries(ownerId, 'NG', 'bank');
+        it(
+            'Should get users beneficiaries',
+            async () => {
+                const ownerId = '2348143100808';
+                const beneficiaries = await FiatRampService.getBeneficiaries(ownerId, 'NG', 'bank');
 
-            console.log(beneficiaries);
+                console.log(beneficiaries);
 
-            expect(beneficiaries).toBeDefined();
-        });
+                expect(beneficiaries).toBeDefined();
+            },
+            TEN_THOUSAND * 3
+        );
         it('Should get hot wallet address', async () => {
             const hotWalletAddress = await FiatRampService.getHotWalletForNetwork('evm');
 
