@@ -4,6 +4,8 @@ import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
+import FiatRampService from '@/app/FiatRamp/FiatRampService';
+import { WhatsAppMessageType, WhatsAppTextMessage } from '@/WhatsAppBot/WhatsAppBotType';
 
 type Message = {
     id: string;
@@ -129,15 +131,20 @@ class WhatsAppBotController {
         logger.info(`message : ${type}`);
 
         if (type === 'text') {
+            if (text.toLowerCase() === 'rates') {
+                await WhatsAppBotController.ratesCommandHandler(from);
+            }
+
             const user = await UserService.getUser(from);
+
             if (user) {
                 const userWallets = await UserService.getUserWalletAssetsList(from);
                 await WhatsAppBotService.listWalletAddressMessage(
-                        businessPhoneNumberId,
-                        displayName,
-                        from,
-                        userWallets,
-                        'old_account'
+                    businessPhoneNumberId,
+                    displayName,
+                    from,
+                    userWallets,
+                    'old_account'
                 );
             } else {
                 await WhatsAppBotService.createWalletMessage(
@@ -146,7 +153,6 @@ class WhatsAppBotController {
                     from
                 );
             }
-           
         } else if (type === 'interactive') {
             logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
@@ -171,19 +177,40 @@ class WhatsAppBotController {
                         );
                     }
                 } else if (userWalletId.includes(interactiveId)) {
-
                     const userAssetInfo = await UserService.getUserAssetInfo(from, interactiveId);
-                    
-                        await WhatsAppBotService.walletDetailsMessage(
-                            businessPhoneNumberId,
-                            from,
-                            userAssetInfo
-                        );
+
+                    await WhatsAppBotService.walletDetailsMessage(
+                        businessPhoneNumberId,
+                        from,
+                        userAssetInfo
+                    );
                 }
             } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }
+    }
+
+    public static async ratesCommandHandler(userPhoneNumber: string) {
+        const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'XAF', 'UGX'];
+        const rates = await FiatRampService.getMultipleRates(targetCurrencies);
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USDC\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(
+            'POST',
+            `${userPhoneNumber}/messages`,
+            messagePayload
+        );
     }
 }
 

@@ -34,6 +34,21 @@ describe('FiatRampService', () => {
         });
 
         it(
+            'Should Get All Rates',
+            async () => {
+                const allRates = await FiatRampService.getMultipleRates([
+                    'NGN',
+                    'KES',
+                    'GHS',
+                    'BWP',
+                ]);
+
+                expect(allRates).toBeDefined();
+            },
+            TEN_THOUSAND * 10
+        );
+
+        it(
             'Should Get Quotes',
             async () => {
                 const quotes = await FiatRampService.getQuotes('NGN', 'NG', 'onramp');

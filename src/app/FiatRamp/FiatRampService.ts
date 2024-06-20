@@ -75,14 +75,39 @@ class FiatRampService {
         return fees.offrampFeePercentage / HUNDRED;
     }
 
-    public static async getRates(currencySymbol: string, route: 'onramp' | 'offramp') {
+    public static async getMultipleRates(targetCurrencies: Array<string> = []) {
+        const currencySymbols =
+            targetCurrencies.length > 0
+                ? targetCurrencies
+                : (await this.getSupportedCurrencies()).map((currency) => currency.currencySymbol);
+
+        const ratesPromises = currencySymbols.map((symbol) => this.getRates(symbol));
+
+        const result = await Promise.allSettled(ratesPromises);
+
+        const availableRates = result.filter(
+            (rateResult) => rateResult.status === 'fulfilled'
+        ) as Array<PromiseFulfilledResult<GetRateResponse['data']>>;
+
+        return availableRates.map((rate) => rate.value);
+    }
+
+    public static async getRates(currencySymbol: string) {
         const requestUrl = `${this.API_URL}${GET_RATES}?currency=${currencySymbol}`;
 
         const response = await axios.get<GetRateResponse>(requestUrl, {
             headers: this.requiredRequestHeaders,
         });
 
-        return route === 'onramp' ? response.data.data.buy : response.data.data.sell;
+        return response.data.data;
+    }
+
+    public static async getBuyRate(currencySymbol: string) {
+        return (await this.getRates(currencySymbol)).buy;
+    }
+
+    public static async getSellRate(currencySymbol: string) {
+        return (await this.getRates(currencySymbol)).sell;
     }
 
     public static async getQuotes(
@@ -90,7 +115,10 @@ class FiatRampService {
         countryCode: CountryCode,
         route: 'onramp' | 'offramp'
     ) {
-        const rate = await this.getRates(currencySymbol, route);
+        const rates = await this.getRates(currencySymbol);
+
+        const rate = route === 'onramp' ? rates.buy : rates.sell;
+
         const fee = await this.getTransactionFee(countryCode, route);
 
         return {
