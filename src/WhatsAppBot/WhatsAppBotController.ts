@@ -168,7 +168,6 @@ class WhatsAppBotController {
                 const { button_reply, list_reply } = interactive;
 
                 const interactiveButtonId = button_reply?.id as string;
-                const interactiveListId = list_reply?.id as string;
                 const userWalletId = ['explore-eth', 'explore-usdc-base'];
                 const userSellAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
                 const userDepositAssetIds = ['buy:explore-eth', 'buy:explore-usdc-base'];
@@ -207,7 +206,7 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         from,
                         usersBeneficiaries,
-                        'interactiveButtonId'
+                        interactiveButtonId
                     );
                 } else if (userDepositAssetIds.includes(interactiveButtonId)) {
                     await WhatsAppBotController.depositAssetCommandHandler(
