@@ -92,7 +92,9 @@ class WalletKitService {
     public static async transferToken(params: TransferTokenParams) {
         const validatedParams = transferTokenParams.parse(params);
 
-        const response = await axios.post<TransactionResponse>(TRANSFER_TOKEN, validatedParams, {
+        const requestUrl = `${this.API_URL}${TRANSFER_TOKEN}`;
+
+        const response = await axios.post<TransactionResponse>(requestUrl, validatedParams, {
             headers: this.requiredRequestHeaders,
         });
 
