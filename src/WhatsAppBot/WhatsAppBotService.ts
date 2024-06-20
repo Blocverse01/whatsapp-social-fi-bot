@@ -90,6 +90,9 @@ class WhatsAppBotService {
             type: "interactive",
             interactive: {
                 type: "list",
+                body : {
+                    text : "Select a beneficiary by clicking the button below."
+                },
                 header: {
                     type: "text",
                     text: "Choose a Beneficiary"
