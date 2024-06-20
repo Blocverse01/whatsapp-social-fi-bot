@@ -8,8 +8,8 @@ export enum TokenAddresses {
 }
 
 export enum TokenNames {
-    USDT_MATIC = 'USDT(MATIC)',
-    USDC_BASE = 'USDC(BASE)',
+    USDT_MATIC = 'USDT (MATIC)',
+    USDC_BASE = 'USDC (BASE)',
     MATIC = 'MATIC',
     ETH = 'ETH (BASE)',
 }
