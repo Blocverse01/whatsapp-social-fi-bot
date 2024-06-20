@@ -56,8 +56,7 @@ class WhatsAppBotService {
                 type: 'button',
                 body: {
                     text: `
-                        🎉 Congrats ${displayName}, welcome aboard! 🎉
-                        We've made decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰
+                        🎉 Congrats ${displayName}, welcome aboard! We've made decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰
                     `,
                 },
                 action: {
