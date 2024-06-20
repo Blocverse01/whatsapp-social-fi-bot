@@ -43,8 +43,8 @@ class WhatsAppBotService {
         const endpoint = `${businessPhoneNumberId}/messages`;
         const text =
             accountType === 'new_account'
-                ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on the asset to display the wallet address and balance`
-                : `Click on the asset to display the wallet address and balance`;
+                ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on an asset to display the wallet address and balance`
+                : `Click on an asset to display the wallet address and balance`;
 
         const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
             .map((asset) => ({
@@ -130,12 +130,12 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         recipient: string,
         userAssetInfo: {
-            usdDisplayBalance: string,
-            tokenBalance: string,
-            walletAddress: string,
-            listItemId: string,
-            assetName: string,
-            assetNetwork : string
+            usdDisplayBalance: string;
+            tokenBalance: string;
+            walletAddress: string;
+            listItemId: string;
+            assetName: string;
+            assetNetwork: string;
         }
     ) {
         const method = 'POST';
@@ -146,8 +146,8 @@ class WhatsAppBotService {
             walletAddress,
             listItemId,
             assetName,
-            assetNetwork
-        } = userAssetInfo
+            assetNetwork,
+        } = userAssetInfo;
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
@@ -161,21 +161,21 @@ class WhatsAppBotService {
                             type: 'reply',
                             reply: {
                                 id: `buy:${listItemId}`,
-                                title: "Buy",
+                                title: 'Buy',
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
                                 id: `sell:${listItemId}`,
-                                title: "Sell",
+                                title: 'Sell',
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
                                 id: `transfer:${listItemId}`,
-                                title: "Transfer",
+                                title: 'Transfer',
                             },
                         },
                     ],
