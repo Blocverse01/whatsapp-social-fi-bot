@@ -1,5 +1,5 @@
 import { createRequestOptions } from '@/Resources/HttpRequest';
-import { WhatsAppInteractiveMessage } from './WhatsAppBotType';
+import { WhatsAppInteractiveButton, WhatsAppInteractiveMessage } from './WhatsAppBotType';
 import axios, { isAxiosError } from 'axios';
 import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
@@ -35,10 +35,21 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         displayName: string,
         recipient: string,
-        walletsAsset: Array<UserAssetItem>
+        walletAssets: Array<UserAssetItem>
     ) {
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
+
+        const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
+            .map((asset) => ({
+                type: 'reply' as const,
+                reply: {
+                    id: asset.listItemId,
+                    title: asset.name,
+                },
+            }))
+            .slice(0, 2);
+
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
@@ -50,13 +61,7 @@ class WhatsAppBotService {
                     `,
                 },
                 action: {
-                    buttons: walletsAsset.map((asset) => ({
-                        type: 'reply',
-                        reply: {
-                            id: asset.listItemId,
-                            title: asset.name,
-                        },
-                    })),
+                    buttons: walletAssetsButton,
                 },
             },
             messaging_product: 'whatsapp',
