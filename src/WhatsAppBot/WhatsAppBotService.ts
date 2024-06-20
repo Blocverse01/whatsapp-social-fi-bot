@@ -100,7 +100,7 @@ class WhatsAppBotService {
             interactive: {
                 type: 'button',
                 body: {
-                    text: `${assetName} (${assetNetwork}) Balance 💰: ${usdDisplayBalance} \n Wallet Address: ${walletAddress}`,
+                    text: `${assetName} Balance 💰: ${usdDisplayBalance} \n Wallet Address: ${walletAddress}`,
                 },
                 action: {
                     buttons: [
