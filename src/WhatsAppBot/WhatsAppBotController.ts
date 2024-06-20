@@ -4,6 +4,7 @@ import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
+import FiatRampService from '@/app/FiatRamp/FiatRampService';
 
 type Message = {
     id: string;
@@ -11,7 +12,12 @@ type Message = {
     from: string;
     text: string;
     interactive: {
-        type: 'button_reply';
+        type: 'button_reply' | 'list_reply';
+         list_reply?: {
+             id: string;
+             title: string;
+             description: string;
+        },
         button_reply?: {
             id: string;
             title: string;
@@ -180,7 +186,20 @@ class WhatsAppBotController {
                             userAssetInfo
                         );
                 }
-            } else {
+            } else if (interactive && interactive.type === 'list_reply') {
+                
+                const usersBeneficiaries = await FiatRampService.getBeneficiaries(
+                    from,
+                    'NG',
+                    'bank'
+                );
+
+                await WhatsAppBotService.listBeneficiaryMessage(
+                    businessPhoneNumberId,
+                    from,
+                    usersBeneficiaries
+                );
+            }else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }

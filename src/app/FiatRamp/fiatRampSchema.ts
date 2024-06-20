@@ -138,6 +138,12 @@ export const mobileMoneyBeneficiarySchema = (countryCode: CountryCode) =>
         countryId: z.string(),
     });
 
+export type BankBeneficiary = z.infer<typeof bankBeneficiarySchema>;
+export type MobileMoneyBeneficiary = z.infer<ReturnType<typeof mobileMoneyBeneficiarySchema>>;
+
+type Beneficiary = BankBeneficiary | MobileMoneyBeneficiary;
+export type UsersBeneficiaries = Beneficiary[];
+
 export const createBeneficiaryParams = (
     beneficiaryType: 'phone' | 'bank',
     countryCode: CountryCode
