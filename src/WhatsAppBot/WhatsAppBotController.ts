@@ -335,7 +335,7 @@ class WhatsAppBotController {
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,
             text: {
-                body: `??Processing Bank Account Withdrawal\n\nAsset:${asset.name}\nAmount: ${cryptoAmountToDebit} USDC\nEquivalent: ${fiatAmountToReceive} NGN\nTransaction ID: ${transactionId}`,
+                body: `🚀Processing Bank Account Withdrawal\n\nAsset:${asset.name}\nAmount: ${cryptoAmountToDebit} USDC\nEquivalent: ${fiatAmountToReceive} NGN\nTransaction ID: ${transactionId}`,
                 preview_url: false,
             },
             messaging_product: 'whatsapp',
