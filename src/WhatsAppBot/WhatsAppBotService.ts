@@ -6,7 +6,8 @@ import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import UserService from '@/User/UserService';
 import logger from '@/Resources/logger';
-import { UserAssetItem } from '@/User/userSchema';
+import {UserAssetItem } from '@/User/userSchema';
+import { BankBeneficiary, MobileMoneyBeneficiary, UsersBeneficiaries } from '@/app/FiatRamp/fiatRampSchema';
 
 class WhatsAppBotService {
     public static async sendWhatsappMessage(method: string, endpoint: string, data: object) {
@@ -71,6 +72,58 @@ class WhatsAppBotService {
             to: recipient,
         };
         await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
+    }
+
+    public static async listBeneficiaryMessage(
+        businessPhoneNumberId: string,
+        recipient: string,
+        usersBeneficiaries : UsersBeneficiaries
+    ) {
+
+        const method = 'POST';
+        const endpoint = `${businessPhoneNumberId}/messages`;
+
+        const intertractiveListMessage = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: recipient,
+            type: "interactive",
+            interactive: {
+                type: "list",
+                header: {
+                    type: "text",
+                    text: "Choose a Beneficiary"
+                },
+                action: {
+                button: "Beneficiaries",
+                    sections: [
+                        {
+                                rows: usersBeneficiaries.map((beneficiary) => {
+                                    let title: string;
+                                    let description: string;
+
+                                    if ((beneficiary as MobileMoneyBeneficiary).firstName) {
+                                        const mobileMoneyBeneficiaryCast = beneficiary as MobileMoneyBeneficiary;
+                                        title = `${mobileMoneyBeneficiaryCast.firstName} ${mobileMoneyBeneficiaryCast.lastName}`
+                                        description = `Mobile Number: ${mobileMoneyBeneficiaryCast.firstName}`
+                                    } else {
+                                        const bankBeneficiaryCast = beneficiary as BankBeneficiary;
+                                        title = `${bankBeneficiaryCast.accountName}`
+                                        description = `Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`
+                                    }
+                                        return {
+                                        id: `beneficiaryId:${beneficiary.id}`,
+                                        title: title,
+                                        description : description
+                                    }
+                            })
+                        }
+                    ]
+                }
+            }
+        }
+
+        await this.sendWhatsappMessage(method, endpoint, intertractiveListMessage);
     }
 
     public static async walletDetailsMessage(
