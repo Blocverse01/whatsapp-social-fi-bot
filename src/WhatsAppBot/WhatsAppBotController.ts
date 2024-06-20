@@ -139,7 +139,7 @@ class WhatsAppBotController {
 
         if (type === 'text') {
             if (text.body.toLowerCase() === 'rates') {
-                await WhatsAppBotController.ratesCommandHandler(from);
+                await WhatsAppBotController.ratesCommandHandler(from, businessPhoneNumberId);
             }
 
             const user = await UserService.getUser(from);
@@ -221,7 +221,10 @@ class WhatsAppBotController {
         }
     }
 
-    public static async ratesCommandHandler(userPhoneNumber: string) {
+    public static async ratesCommandHandler(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string
+    ) {
         const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'XAF', 'UGX'];
         const rates = await FiatRampService.getMultipleRates(targetCurrencies);
 
@@ -238,7 +241,7 @@ class WhatsAppBotController {
 
         await WhatsAppBotService.sendWhatsappMessage(
             'POST',
-            `${userPhoneNumber}/messages`,
+            `${businessPhoneNumberId}/messages`,
             messagePayload
         );
     }
