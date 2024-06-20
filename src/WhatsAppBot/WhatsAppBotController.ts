@@ -212,7 +212,7 @@ class WhatsAppBotController {
                     await WhatsAppBotController.depositAssetCommandHandler(
                         from,
                         businessPhoneNumberId,
-                        interactiveButtonId
+                        interactiveButtonId.split(':')[1]
                     );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
