@@ -42,7 +42,7 @@ class WhatsAppBotService {
         const endpoint = `${businessPhoneNumberId}/messages`;
         const text =
             accountType === 'new_account'
-                ? `🎉 Congrats ${displayName}, welcome aboard!\nWe've made decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\nClick on the asset to display the wallet address and balance`
+                ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on the asset to display the wallet address and balance`
                 : `Click on the asset to display the wallet address and balance`;
 
         const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
