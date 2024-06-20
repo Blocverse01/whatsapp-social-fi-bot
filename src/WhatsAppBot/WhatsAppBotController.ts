@@ -11,14 +11,16 @@ type Message = {
     id: string;
     type: string;
     from: string;
-    text: string;
+    text: {
+        body: string;
+    };
     interactive: {
         type: 'button_reply' | 'list_reply';
-         list_reply?: {
-             id: string;
-             title: string;
-             description: string;
-        },
+        list_reply?: {
+            id: string;
+            title: string;
+            description: string;
+        };
         button_reply?: {
             id: string;
             title: string;
@@ -136,8 +138,8 @@ class WhatsAppBotController {
         logger.info(`message : ${type}`);
 
         if (type === 'text') {
-            if (text.toLowerCase() === 'rates') {
-                await WhatsAppBotController.ratesCommandHandler(from);
+            if (text.body.toLowerCase() === 'rates') {
+                await WhatsAppBotController.ratesCommandHandler(from, businessPhoneNumberId);
             }
 
             const user = await UserService.getUser(from);
@@ -200,7 +202,7 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         from,
                         usersBeneficiaries
-                    )
+                    );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
 
@@ -225,7 +227,10 @@ class WhatsAppBotController {
         }
     }
 
-    public static async ratesCommandHandler(userPhoneNumber: string) {
+    public static async ratesCommandHandler(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string
+    ) {
         const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'XAF', 'UGX'];
         const rates = await FiatRampService.getMultipleRates(targetCurrencies);
 
@@ -242,7 +247,7 @@ class WhatsAppBotController {
 
         await WhatsAppBotService.sendWhatsappMessage(
             'POST',
-            `${userPhoneNumber}/messages`,
+            `${businessPhoneNumberId}/messages`,
             messagePayload
         );
     }
