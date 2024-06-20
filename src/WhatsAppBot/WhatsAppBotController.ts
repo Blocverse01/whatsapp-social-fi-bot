@@ -6,6 +6,7 @@ import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { WhatsAppMessageType, WhatsAppTextMessage } from '@/WhatsAppBot/WhatsAppBotType';
+import { SELL_BENEFICIARY__AMOUNT_PATTERN } from '@/constants/regex';
 
 type Message = {
     id: string;
@@ -214,20 +215,27 @@ class WhatsAppBotController {
                         businessPhoneNumberId,
                         interactiveButtonId.split(':')[1]
                     );
+                } else if (interactiveButtonId.match(SELL_BENEFICIARY__AMOUNT_PATTERN)) {
+                    const { sell, beneficiaryId, amount } = interactiveButtonId.match(
+                        SELL_BENEFICIARY__AMOUNT_PATTERN
+                    )?.groups as { sell: string; beneficiaryId: string; amount: string };
+
+                    logger.info(
+                        `sell : ${sell}, beneficiaryId : ${beneficiaryId}, amount : ${amount}`
+                    );
                 }
             } else if (interactive && interactive.type === 'list_reply') {
                 const { list_reply } = interactive;
                 const interactiveListId = list_reply?.id as string;
 
                 logger.info(`off-ramp-data : ${interactiveListId}`);
-                
+
                 await WhatsAppBotService.selectAmountMessage(
                     businessPhoneNumberId,
-                    from ,
+                    from,
                     interactiveListId
-                )
-
-            }else {
+                );
+            } else {
                 logger.info("No interactive message found or type is not 'button_reply'.");
             }
         }
