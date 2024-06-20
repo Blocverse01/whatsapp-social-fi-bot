@@ -171,7 +171,7 @@ class WhatsAppBotController {
                 const interactiveListId = list_reply?.id as string;
                 const userWalletId = ['explore-eth', 'explore-usdc-base'];
                 const userSellAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
-                const userDepositAssetIds = ['deposit:explore-eth', 'deposit:explore-usdc-base'];
+                const userDepositAssetIds = ['buy:explore-eth', 'buy:explore-usdc-base'];
 
                 if (interactiveButtonId === 'create-wallet') {
                     const createdNewUser = await UserService.createUser(from, displayName);
