@@ -1,18 +1,35 @@
-import { createRequestOptions } from '@/Resources/HttpRequest';
 import { WhatsAppInteractiveButton, WhatsAppInteractiveMessage } from './WhatsAppBotType';
 import axios, { isAxiosError } from 'axios';
 import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { HttpException } from '@/Resources/exceptions/HttpException';
-import UserService from '@/User/UserService';
+import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
-import {UserAssetItem } from '@/User/userSchema';
-import { BankBeneficiary, MobileMoneyBeneficiary, UsersBeneficiaries } from '@/app/FiatRamp/fiatRampSchema';
+import { UserAssetItem } from '@/app/User/userSchema';
+import {
+    BankBeneficiary,
+    MobileMoneyBeneficiary,
+    UsersBeneficiaries,
+} from '@/app/FiatRamp/fiatRampSchema';
 
 class WhatsAppBotService {
+    private static createRequestOptions(
+        method: string,
+        endpoint: string,
+        requestBody: string | object = {}
+    ) {
+        return {
+            headers: {
+                accept: 'application/json',
+                'content-type': 'application/json',
+                Authorization: `Bearer ${env.CLOUD_API_ACCESS_TOKEN}`,
+            },
+        };
+    }
+
     public static async sendWhatsappMessage(method: string, endpoint: string, data: object) {
         try {
-            const requestOptions = createRequestOptions(method, endpoint, data);
+            const requestOptions = this.createRequestOptions(method, endpoint, data);
             const response = await axios.post(
                 `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
@@ -78,54 +95,54 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         recipient: string,
         usersBeneficiaries: UsersBeneficiaries,
-        assetId : string
+        assetId: string
     ) {
-
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
 
         const interactiveMessageList = {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
             to: recipient,
-            type: "interactive",
+            type: 'interactive',
             interactive: {
-                type: "list",
-                body : {
-                    text : "Select a beneficiary by clicking the button below."
+                type: 'list',
+                body: {
+                    text: 'Select a beneficiary by clicking the button below.',
                 },
                 header: {
-                    type: "text",
-                    text: "Choose a Beneficiary"
+                    type: 'text',
+                    text: 'Choose a Beneficiary',
                 },
                 action: {
-                button: "Beneficiaries",
+                    button: 'Beneficiaries',
                     sections: [
                         {
-                                rows: usersBeneficiaries.map((beneficiary) => {
-                                    let title: string;
-                                    let description: string;
+                            rows: usersBeneficiaries.map((beneficiary) => {
+                                let title: string;
+                                let description: string;
 
-                                    if ((beneficiary as MobileMoneyBeneficiary).firstName) {
-                                        const mobileMoneyBeneficiaryCast = beneficiary as MobileMoneyBeneficiary;
-                                        title =`${mobileMoneyBeneficiaryCast.firstName} ${mobileMoneyBeneficiaryCast.lastName}`
-                                        description =`Mobile Number: ${mobileMoneyBeneficiaryCast.firstName}`
-                                    } else {
-                                        const bankBeneficiaryCast = beneficiary as BankBeneficiary;
-                                        title =`${bankBeneficiaryCast.accountName}`
-                                        description =`Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`
-                                    }
-                                        return {
-                                        id: `${assetId}|beneficiaryId:${beneficiary.id}`,
-                                        title: title,
-                                        description : description
-                                    }
-                            })
-                        }
-                    ]
-                }
-            }
-        }
+                                if ((beneficiary as MobileMoneyBeneficiary).firstName) {
+                                    const mobileMoneyBeneficiaryCast =
+                                        beneficiary as MobileMoneyBeneficiary;
+                                    title = `${mobileMoneyBeneficiaryCast.firstName} ${mobileMoneyBeneficiaryCast.lastName}`;
+                                    description = `Mobile Number: ${mobileMoneyBeneficiaryCast.firstName}`;
+                                } else {
+                                    const bankBeneficiaryCast = beneficiary as BankBeneficiary;
+                                    title = `${bankBeneficiaryCast.accountName}`;
+                                    description = `Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`;
+                                }
+                                return {
+                                    id: `${assetId}|beneficiaryId:${beneficiary.id}`,
+                                    title: title,
+                                    description: description,
+                                };
+                            }),
+                        },
+                    ],
+                },
+            },
+        };
 
         await this.sendWhatsappMessage(method, endpoint, interactiveMessageList);
     }
@@ -236,7 +253,7 @@ class WhatsAppBotService {
 
         // Create request options with error handling (assuming createRequestOptions doesn't handle errors)
         try {
-            const requestOptions = createRequestOptions(method, endpoint, data);
+            const requestOptions = this.createRequestOptions(method, endpoint, data);
             const response = await axios.post(
                 `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
@@ -251,9 +268,8 @@ class WhatsAppBotService {
     public static async selectAmountMessage(
         businessPhoneNumberId: string,
         recipient: string,
-        beneficiaryId : string
+        beneficiaryId: string
     ) {
-        
         const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
@@ -269,21 +285,21 @@ class WhatsAppBotService {
                             type: 'reply',
                             reply: {
                                 id: `${beneficiaryId}|amount:2`,
-                                title: "$2",
+                                title: '$2',
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
                                 id: `${beneficiaryId}|amount:5`,
-                                title: "$5",
+                                title: '$5',
                             },
                         },
                         {
                             type: 'reply',
                             reply: {
                                 id: `${beneficiaryId}|amount:10`,
-                                title: "$10",
+                                title: '$10',
                             },
                         },
                     ],

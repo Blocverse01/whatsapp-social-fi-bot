@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import env from '@/constants/env';
-import WhatsAppBotService from '@/WhatsAppBot/WhatsAppBotService';
-import UserService from '@/User/UserService';
+import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
+import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { WhatsAppMessageType, WhatsAppTextMessage } from '@/WhatsAppBot/WhatsAppBotType';
+import { WhatsAppMessageType, WhatsAppTextMessage } from '@/app/WhatsAppBot/WhatsAppBotType';
 import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
 import { TokenNames } from '@/Resources/web3/tokens';
 import { isAxiosError } from 'axios';
@@ -262,8 +262,7 @@ class WhatsAppBotController {
         userPhoneNumber: string,
         businessPhoneNumberId: string
     ) {
-        const targetCurrencies = ['NGN', 'KES', 'GHS', 'ZAR', 'UGX'];
-        const rates = await FiatRampService.getMultipleRates(targetCurrencies);
+        const rates = await FiatRampService.getAllRates();
 
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,

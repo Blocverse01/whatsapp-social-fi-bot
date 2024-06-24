@@ -2,11 +2,9 @@ import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import { dbClient } from '@/Db/dbClient';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import env from '@/constants/env';
-import { createRequestOptions } from '@/Resources/HttpRequest';
-import axios from 'axios';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
-import { UserAssetItem } from '@/User/userSchema';
+import { UserAssetItem } from '@/app/User/userSchema';
 import {
     ethConfig,
     getDummyUsdValue,
