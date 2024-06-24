@@ -2,6 +2,7 @@ import env from '@/constants/env';
 import axios from 'axios';
 import {
     CREATE_BENEFICIARY,
+    GET_ALL_RATES,
     GET_BANKS,
     GET_BENEFICIARIES,
     GET_HOT_WALLET_ADDRESS,
@@ -20,6 +21,7 @@ import {
     createBeneficiaryParams,
     CreateBeneficiaryParams,
     CreateBeneficiaryResponse,
+    GetAllRatesResponse,
     GetBeneficiariesResponse,
     GetCurrenciesResponse,
     GetMobileProvidersResponse,
@@ -77,21 +79,22 @@ class FiatRampService {
         return fees.offrampFeePercentage / HUNDRED;
     }
 
+    public static async getAllRates() {
+        const requestUrl = `${this.API_URL}${GET_ALL_RATES}`;
+
+        const response = await axios.get<GetAllRatesResponse>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
+
+        return response.data.data;
+    }
+
     public static async getMultipleRates(targetCurrencies: Array<string> = []) {
-        const currencySymbols =
-            targetCurrencies.length > 0
-                ? targetCurrencies
-                : (await this.getSupportedCurrencies()).map((currency) => currency.currencySymbol);
+        const allRates = await this.getAllRates();
 
-        const ratesPromises = currencySymbols.map((symbol) => this.getRates(symbol));
-
-        const result = await Promise.allSettled(ratesPromises);
-
-        const availableRates = result.filter(
-            (rateResult) => rateResult.status === 'fulfilled'
-        ) as Array<PromiseFulfilledResult<GetRateResponse['data']>>;
-
-        return availableRates.map((rate) => rate.value);
+        return targetCurrencies.length > 0
+            ? allRates.filter((rate) => targetCurrencies.includes(rate.code))
+            : allRates;
     }
 
     public static async getRates(currencySymbol: string) {
@@ -300,16 +303,14 @@ class FiatRampService {
     public static async storeOffRampTemporaryTransaction(
         userId: string,
         usdAmount: number,
-        beneficiaryId : number
+        beneficiaryId: number
     ) {
-            
         const data = await this.getOffRampTemporaryTransaction(userId);
 
         if (data) {
             //  const record = this.OFF_RAMP_TEMPORARY_TRANSACTION.create({
             //      "beneficiaryId": beneficiaryId,
             //      "usdAmount": usdAmount,
-                 
             //  });
             // await this.OFF_RAMP_TEMPORARY_TRANSACTION.create({
             //     beneficiaryId: "string",
@@ -318,13 +319,12 @@ class FiatRampService {
             //     status: "string",
             // });
         }
-           
     }
 
-    public static async getOffRampTemporaryTransaction(userId:string) {
+    public static async getOffRampTemporaryTransaction(userId: string) {
         const record = this.OFF_RAMP_TEMPORARY_TRANSACTION.filter({
             'user.id': userId,
-            $any: [{ status: "failed" }, { status: "complete" }]
+            $any: [{ status: 'failed' }, { status: 'complete' }],
         }).getFirst();
 
         return !!record;

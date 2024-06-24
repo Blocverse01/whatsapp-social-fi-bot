@@ -158,6 +158,26 @@ describe('FiatRampService', () => {
 
     describe('Offramp', () => {
         it(
+            'Should get supported banks',
+            async () => {
+                const channels = await FiatRampService.getPaymentMethods('NG', 'offramp');
+                const bankChannel = channels.paymentChannels.find(
+                    (channel) => channel.channelName === 'bank'
+                );
+
+                if (!bankChannel) {
+                    throw new Error('Bank channel not found');
+                }
+
+                const supportedBanks = await FiatRampService.getSupportedBanks(
+                    bankChannel.channelId
+                );
+
+                console.log(supportedBanks);
+            },
+            TEN_THOUSAND * 2
+        );
+        it(
             'Should create owner beneficiary',
             async () => {
                 const channels = await FiatRampService.getPaymentMethods('NG', 'offramp');
@@ -174,14 +194,14 @@ describe('FiatRampService', () => {
                 );
 
                 const choiceBank = supportedBanks.find(
-                    (bank) => bank.name.toLowerCase() === 'sterling bank'
+                    (bank) => bank.slug.toLowerCase() === 'guaranty-trust-bank'
                 );
 
                 if (!choiceBank) {
                     throw new Error('Bank not found');
                 }
 
-                const ownerId = '2348143100808';
+                const ownerId = '2348146843432';
 
                 const beneficiaryId = await FiatRampService.createBeneficiary(
                     ownerId,
@@ -190,8 +210,8 @@ describe('FiatRampService', () => {
                     {
                         beneficiary: {
                             countryId: 'rec_ckhg3eg7afgqhtu4ijj0',
-                            accountName: 'Joshua Avoaja',
-                            accountNumber: '0088673502',
+                            accountName: 'Victor Eluke',
+                            accountNumber: '0899632169',
                             bankName: choiceBank.name,
                             channelId: choiceBank.channelId,
                             networkId: choiceBank.networkId,

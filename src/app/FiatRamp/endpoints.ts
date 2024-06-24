@@ -4,6 +4,7 @@ export const GET_SUPPORTED_CURRENCIES = FIAT_RAMPS + '/get-supported-countries';
 export const GET_TRANSACTION_FEE = FIAT_RAMPS + '/get-fee';
 export const GET_PAYMENT_CHANNELS = FIAT_RAMPS + '/get-supported-channels';
 export const GET_RATES = FIAT_RAMPS + '/get-rate';
+export const GET_ALL_RATES = FIAT_RAMPS + '/get-all-rates';
 export const GET_MOBILE_PROVIDERS = FIAT_RAMPS + '/get-supported-mobile-providers';
 
 // ONRAMP (BUY CRYPTO)

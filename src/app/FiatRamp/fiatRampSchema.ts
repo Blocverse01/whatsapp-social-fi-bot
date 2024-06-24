@@ -25,16 +25,24 @@ export const getTransactionFeeResponseSchema = z.object({
 
 export type GetTransactionFeeResponse = z.infer<typeof getTransactionFeeResponseSchema>;
 
+export const ratesSchema = z.object({
+    buy: z.number(),
+    sell: z.number(),
+    locale: z.string(),
+    code: z.string(),
+});
+
 export const getRateResponseSchema = z.object({
-    data: z.object({
-        buy: z.number(),
-        sell: z.number(),
-        locale: z.string(),
-        code: z.string(),
-    }),
+    data: ratesSchema,
 });
 
 export type GetRateResponse = z.infer<typeof getRateResponseSchema>;
+
+export const getAllRatesResponseSchema = z.object({
+    data: z.array(ratesSchema),
+});
+
+export type GetAllRatesResponse = z.infer<typeof getAllRatesResponseSchema>;
 
 export const getPaymentMethodsResponseSchema = z.object({
     data: z.object({
