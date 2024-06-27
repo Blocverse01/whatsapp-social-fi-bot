@@ -1,13 +1,21 @@
 import express, { type Request } from 'express';
 import cors from 'cors';
-import { NOT_FOUND, OK } from "@/constants/status-codes";
-import env from "@/constants/env";
+import { NOT_FOUND, OK } from '@/constants/status-codes';
+import env from '@/constants/env';
 import apiRoutes from './Routes';
 import logger from '@/Resources/logger';
 
 const app = express();
 
-app.use(express.json());
+// middleware for capturing raw body
+app.use(
+    express.json({
+        limit: '5mb',
+        verify: (req: Request, res, buf) => {
+            req.rawBody = buf.toString();
+        },
+    })
+);
 
 app.get('/', async (_, res) => {
     res.status(OK).send('API welcomes you :)');
