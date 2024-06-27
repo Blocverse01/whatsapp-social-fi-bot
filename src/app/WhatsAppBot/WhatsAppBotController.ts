@@ -154,7 +154,7 @@ class WhatsAppBotController {
                 return;
             }
 
-            const user = await UserService.getUser(from);
+            const user = await UserService.userExists(from);
 
             if (user) {
                 const userWallets = await UserService.getUserWalletAssetsList(from);

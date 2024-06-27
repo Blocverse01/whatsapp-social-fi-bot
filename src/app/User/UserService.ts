@@ -13,17 +13,15 @@ import {
     usdcBaseConfig,
     usdtPolygonConfig,
 } from '@/Resources/web3/tokens';
-import { Users } from 'walletkit-js/api/resources/users/client/Client';
-import { Wallet } from 'walletkit-js/serialization';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { parseUnits, toHex } from 'viem';
+import { UserRecord } from '@/Db/xata';
 
 class UserService {
     private static USER_TABLE = dbClient.User;
 
     public static async createUser(phoneNumber: string, displayName: string) {
         try {
-            const user = await this.getUser(phoneNumber);
+            const user = await this.userExists(phoneNumber);
 
             if (!user) {
                 await this.USER_TABLE.create({
@@ -52,9 +50,44 @@ class UserService {
         }
     }
 
-    public static async getUser(phoneNumber: string) {
-        const record = await this.USER_TABLE.filter({ phoneNumber }).getFirst();
+    public static async userExists(phoneNumber: string) {
+        const record = await this.getUserByPhoneNumber(phoneNumber);
         return !!record;
+    }
+
+    public static async getUserByPhoneNumber(phoneNumber: string) {
+        return await this.USER_TABLE.filter({ phoneNumber }).getFirst();
+    }
+
+    public static async updateUserInfoFromKyc(
+        user: UserRecord,
+        info: Pick<
+            UserRecord,
+            | 'country'
+            | 'firstName'
+            | 'kycStatus'
+            | 'lastName'
+            | 'kycDateOfBirth'
+            | 'kycIdType'
+            | 'kycDocumentNumber'
+        >
+    ) {
+        try {
+            await this.USER_TABLE.update(user.id, info);
+        } catch (err) {
+            throw new HttpException(INTERNAL_SERVER_ERROR, 'User info not updated!');
+        }
+    }
+
+    public static async updateUserKycStatus(
+        user: UserRecord,
+        newStatus: 'VERIFIED' | 'IN_REVIEW' | 'REJECTED' | null
+    ) {
+        try {
+            await this.USER_TABLE.update(user.id, { kycStatus: newStatus }, ['kycStatus']);
+        } catch (err) {
+            throw new HttpException(INTERNAL_SERVER_ERROR, 'KYC status not updated!');
+        }
     }
 
     public static async createUserWallets(phoneNumber: string) {

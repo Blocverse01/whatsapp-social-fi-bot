@@ -24,6 +24,9 @@ const envSchema = z.object({
     FIAT_RAMPS_PROVIDER_PROJECT_ID: notEmptyStringSchema('FIAT_RAMPS_PROVIDER_PROJECT_ID'),
     DEVELOPER_SECRET: notEmptyStringSchema('DEVELOPER_SECRET'),
     WEB3_ENVIRONMENT: z.enum(['testnet', 'mainnet']).default('testnet'),
+    SUM_SUB_APP_TOKEN: notEmptyStringSchema('SUM_SUB_APP_TOKEN'),
+    SUM_SUB_APP_TOKEN_SECRET: notEmptyStringSchema('SUM_SUB_APP_TOKEN_SECRET'),
+    SUM_SUB_WEBHOOK_PRIVATE_KEY: notEmptyStringSchema('SUM_SUB_WEBHOOK_PRIVATE_KEY'),
 });
 
 const env = envSchema.parse(process.env);

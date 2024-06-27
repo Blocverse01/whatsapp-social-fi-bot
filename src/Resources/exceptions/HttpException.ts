@@ -10,3 +10,10 @@ export class HttpException extends Error {
         this.data = data;
     }
 }
+
+export const isHttpError = (error: unknown): error is HttpException => {
+    return (
+        (error as HttpException).status !== undefined &&
+        (error as HttpException).message !== undefined
+    );
+};
