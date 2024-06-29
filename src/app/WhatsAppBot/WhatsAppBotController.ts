@@ -9,7 +9,7 @@ import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
 import { isAxiosError } from 'axios';
 import {
     ASSET_ACTION_REGEX_PATTERN,
-    AssetActionRegexGroups,
+    AssetActionRegexMatch,
     RATES_COMMAND,
     WhatsAppMessageType,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
@@ -258,14 +258,15 @@ class WhatsAppBotController {
                         );
                         return;
                     case 'explore-asset-action':
-                        const regexGroups = interactiveListId.match(ASSET_ACTION_REGEX_PATTERN)
-                            ?.groups as AssetActionRegexGroups;
+                        const [_interactiveListId, assetAction, assetId] = interactiveListId.match(
+                            ASSET_ACTION_REGEX_PATTERN
+                        ) as AssetActionRegexMatch;
 
                         logger.info('Explore asset regex groups', {
-                            regexGroups,
+                            regexMatch: [_interactiveListId, assetAction, assetId],
                         });
 
-                        if (regexGroups.sell) {
+                        if (assetAction === 'sell') {
                             const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                                 from,
                                 'NG',
@@ -282,19 +283,19 @@ class WhatsAppBotController {
                             return;
                         }
 
-                        if (regexGroups.buy) {
+                        if (assetAction === 'buy') {
                             // TODO: handle buying asset with crypto
                         }
 
-                        if (regexGroups.withdraw) {
+                        if (assetAction === 'withdraw') {
                             // TODO: handle withdraw asset to wallet
                         }
 
-                        if (regexGroups.deposit) {
+                        if (assetAction === 'deposit') {
                             await WhatsAppBotService.depositAssetCommandHandler(
                                 from,
                                 businessPhoneNumberId,
-                                regexGroups.deposit
+                                assetId
                             );
                         }
 

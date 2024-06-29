@@ -83,6 +83,26 @@ export const ASSET_ACTION_REGEX_PATTERN = `^(${actions}):(${assetIds})$`;
 // Create the regex object
 export const ASSET_ACTION_REGEX = new RegExp(ASSET_ACTION_REGEX_PATTERN);
 
+const testStrings = [
+    'buy:eth-base',
+    'deposit:usdc-base',
+    'withdraw:matic-polygon',
+    'sell:usdt-polygon',
+    'invalid:usdc-base',
+    'buy:invalid-base',
+];
+
+testStrings.forEach((str) => {
+    const match = str.match(ASSET_ACTION_REGEX);
+
+    console.log(match);
+    if (match) {
+        console.log(`${str}: Matched`);
+    } else {
+        console.log(`${str}: Not Matched`);
+    }
+});
+
 export const RATES_COMMAND = 'rates';
 
 type AssetAction = {
@@ -120,6 +140,4 @@ export type InteractiveButtonReplyTypes =
     | 'demo-withdraw-amount-to-beneficiary';
 export type InteractiveListReplyTypes = 'explore-asset-action' | 'demo-withdraw-to-beneficiary';
 
-export type AssetActionRegexGroups = {
-    [key in ExploreAssetActions]?: string;
-};
+export type AssetActionRegexMatch = [string, ExploreAssetActions, AssetInteractiveButtonIds];
