@@ -441,7 +441,8 @@ class WhatsAppBotService {
             return 'explore-asset-action';
         }
 
-        throw new Error('Unrecognized action');
+        // TODO: do a regex check for this use case
+        return 'demo-withdraw-to-beneficiary';
     }
 }
 
