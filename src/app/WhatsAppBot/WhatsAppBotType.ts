@@ -108,7 +108,7 @@ export const manageAssetActions: Array<AssetAction> = [
         description: 'Send asset to a wallet outside BlocPal',
     },
     {
-        text: 'Withdraw To Bank/Mobile Money',
+        text: 'Withdraw as Fiat',
         action: ExploreAssetActions.SELL_ASSET,
         description: 'Withdraw asset to your local currency',
     },

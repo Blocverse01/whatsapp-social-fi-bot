@@ -81,7 +81,7 @@ class WhatsAppBotService {
                 type: 'reply' as const,
                 reply: {
                     id: asset.listItemId,
-                    title: asset.name,
+                    title: `${asset.name} (${asset.network.toUpperCase()})`,
                 },
             }))
             .slice(0, 2);
