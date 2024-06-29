@@ -258,11 +258,14 @@ class WhatsAppBotController {
                         );
                         return;
                     case 'explore-asset-action':
-                        const { sell, buy, withdraw, deposit } = interactiveListId.match(
-                            ASSET_ACTION_REGEX_PATTERN
-                        )?.groups as AssetActionRegexGroups;
+                        const regexGroups = interactiveListId.match(ASSET_ACTION_REGEX_PATTERN)
+                            ?.groups as AssetActionRegexGroups;
 
-                        if (sell) {
+                        logger.info('Explore asset regex groups', {
+                            regexGroups,
+                        });
+
+                        if (regexGroups.sell) {
                             const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                                 from,
                                 'NG',
@@ -279,19 +282,19 @@ class WhatsAppBotController {
                             return;
                         }
 
-                        if (buy) {
+                        if (regexGroups.buy) {
                             // TODO: handle buying asset with crypto
                         }
 
-                        if (withdraw) {
+                        if (regexGroups.withdraw) {
                             // TODO: handle withdraw asset to wallet
                         }
 
-                        if (deposit) {
+                        if (regexGroups.deposit) {
                             await WhatsAppBotService.depositAssetCommandHandler(
                                 from,
                                 businessPhoneNumberId,
-                                deposit
+                                regexGroups.deposit
                             );
                         }
 
