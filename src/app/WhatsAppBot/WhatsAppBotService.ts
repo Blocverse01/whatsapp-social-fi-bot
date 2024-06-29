@@ -194,7 +194,7 @@ class WhatsAppBotService {
                         {
                             rows: manageAssetActions.map((assetAction) => {
                                 return {
-                                    id: `action:${assetAction.action}|assetId:${listItemId}`,
+                                    id: `${assetAction.action}:${listItemId}`,
                                     title: assetAction.text,
                                     description: assetAction.description,
                                 };
