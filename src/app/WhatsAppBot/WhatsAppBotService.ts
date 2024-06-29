@@ -1,4 +1,17 @@
-import { WhatsAppInteractiveButton, WhatsAppInteractiveMessage } from './WhatsAppBotType';
+import {
+    ASSET_ACTION_REGEX_PATTERN,
+    AssetInteractiveButtonIds,
+    assetInteractiveButtonsIds,
+    BaseInteractiveButtonIds,
+    ExploreAssetActions,
+    InteractiveButtonReplyTypes,
+    InteractiveListReplyTypes,
+    manageAssetActions,
+    WhatsAppInteractiveButton,
+    WhatsAppInteractiveMessage,
+    WhatsAppMessageType,
+    WhatsAppTextMessage,
+} from './WhatsAppBotType';
 import axios, { isAxiosError } from 'axios';
 import env from '@/constants/env';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
@@ -11,13 +24,13 @@ import {
     MobileMoneyBeneficiary,
     UsersBeneficiaries,
 } from '@/app/FiatRamp/fiatRampSchema';
+import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
+import FiatRampService from '@/app/FiatRamp/FiatRampService';
+import { TokenNames } from '@/Resources/web3/tokens';
+import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
 
 class WhatsAppBotService {
-    private static createRequestOptions(
-        method: string,
-        endpoint: string,
-        requestBody: string | object = {}
-    ) {
+    private static getRequestConfig() {
         return {
             headers: {
                 accept: 'application/json',
@@ -27,9 +40,11 @@ class WhatsAppBotService {
         };
     }
 
-    public static async sendWhatsappMessage(method: string, endpoint: string, data: object) {
+    public static async sendWhatsappMessage(businessPhoneNumberId: string, data: object) {
+        const endpoint = `${businessPhoneNumberId}/messages`;
+
         try {
-            const requestOptions = this.createRequestOptions(method, endpoint, data);
+            const requestOptions = this.getRequestConfig();
             const response = await axios.post(
                 `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
@@ -56,8 +71,6 @@ class WhatsAppBotService {
         walletAssets: Array<UserAssetItem>,
         accountType: string
     ) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
         const text =
             accountType === 'new_account'
                 ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on an asset to display the wallet address and balance`
@@ -88,7 +101,7 @@ class WhatsAppBotService {
             recipient_type: 'individual',
             to: recipient,
         };
-        await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
     }
 
     public static async listBeneficiaryMessage(
@@ -97,9 +110,6 @@ class WhatsAppBotService {
         usersBeneficiaries: UsersBeneficiaries,
         assetId: string
     ) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
-
         const interactiveMessageList = {
             messaging_product: 'whatsapp',
             recipient_type: 'individual',
@@ -144,7 +154,7 @@ class WhatsAppBotService {
             },
         };
 
-        await this.sendWhatsappMessage(method, endpoint, interactiveMessageList);
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessageList);
     }
 
     public static async walletDetailsMessage(
@@ -159,45 +169,36 @@ class WhatsAppBotService {
             assetNetwork: string;
         }
     ) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
         const {
             usdDisplayBalance,
-            tokenBalance,
             walletAddress,
             listItemId,
+            tokenBalance,
             assetName,
             assetNetwork,
         } = userAssetInfo;
         const interactiveMessage: WhatsAppInteractiveMessage = {
-            type: 'interactive',
+            type: WhatsAppMessageType.INTERACTIVE,
             interactive: {
-                type: 'button',
+                type: 'list',
                 body: {
-                    text: `${assetName} Balance 💰: ${usdDisplayBalance} \n Wallet Address: ${walletAddress}`,
+                    text: `Asset Balance 💰: ${tokenBalance} \n\nAsset Balance(USD) 💰: ${usdDisplayBalance} \n\nWallet Address: ${walletAddress}`,
+                },
+                header: {
+                    type: 'text',
+                    text: `${assetName} (${assetNetwork.toUpperCase()})`,
                 },
                 action: {
-                    buttons: [
+                    button: 'Manage Asset',
+                    sections: [
                         {
-                            type: 'reply',
-                            reply: {
-                                id: `buy:${listItemId}`,
-                                title: 'Deposit to wallet',
-                            },
-                        },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: `sell:${listItemId}`,
-                                title: 'Withdraw to bank',
-                            },
-                        },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: `transfer:${listItemId}`,
-                                title: 'Transfer',
-                            },
+                            rows: manageAssetActions.map((assetAction) => {
+                                return {
+                                    id: `${assetAction.action}:${listItemId}`,
+                                    title: assetAction.text,
+                                    description: assetAction.description,
+                                };
+                            }),
                         },
                     ],
                 },
@@ -206,7 +207,8 @@ class WhatsAppBotService {
             recipient_type: 'individual',
             to: recipient,
         };
-        await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
     }
 
     public static async createWalletMessage(
@@ -214,8 +216,6 @@ class WhatsAppBotService {
         displayName: string,
         recipient: string
     ) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
@@ -228,7 +228,7 @@ class WhatsAppBotService {
                         {
                             type: 'reply',
                             reply: {
-                                id: 'create-wallet',
+                                id: BaseInteractiveButtonIds.CREATE_WALLET,
                                 title: "Let's go 🚀",
                             },
                         },
@@ -239,21 +239,19 @@ class WhatsAppBotService {
             recipient_type: 'individual',
             to: recipient,
         };
-        await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
     }
 
     public static async markMassageAsRead(businessPhoneNumberId: string, messageId: string) {
-        const method = 'POST';
         const endpoint = `${businessPhoneNumberId}/messages`;
         const data = {
             messaging_product: 'whatsapp',
             status: 'read',
-            message_id: messageId, // Replace with the actual message ID
+            message_id: messageId,
         };
 
-        // Create request options with error handling (assuming createRequestOptions doesn't handle errors)
         try {
-            const requestOptions = this.createRequestOptions(method, endpoint, data);
+            const requestOptions = this.getRequestConfig();
             const response = await axios.post(
                 `${env.CLOUD_API_URL}/${endpoint}`,
                 data,
@@ -261,7 +259,7 @@ class WhatsAppBotService {
             );
             console.log('Message marked as read successfully:', response.data); // Handle successful response (optional)
         } catch (error) {
-            console.error('Error marking message as read:', error); // Handle errors
+            logServiceError(error, 'Error marking message as read:');
         }
     }
 
@@ -270,8 +268,6 @@ class WhatsAppBotService {
         recipient: string,
         beneficiaryId: string
     ) {
-        const method = 'POST';
-        const endpoint = `${businessPhoneNumberId}/messages`;
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
@@ -309,17 +305,15 @@ class WhatsAppBotService {
             recipient_type: 'individual',
             to: recipient,
         };
-        await this.sendWhatsappMessage(method, endpoint, interactiveMessage);
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
     }
-
-    async walletCreationConfirmationMassage() {}
 
     public static async isMessageProcessed(messageId: string) {
         try {
             const data = await UserService.getUserByMessageId(messageId);
             return !!data;
         } catch (error) {
-            console.error('Error checking processed messages:', error);
+            logServiceError(error, 'Error checking processed messages:');
         }
     }
 
@@ -328,8 +322,126 @@ class WhatsAppBotService {
         try {
             const data = await UserService.markMessageProcessed(messageId);
         } catch (error) {
-            console.error('Error marking message as processed:', error);
+            logServiceError(error, 'Error marking message as processed:');
         }
+    }
+
+    public static async ratesCommandHandler(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string
+    ) {
+        const rates = await FiatRampService.getAllRates();
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USDC\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
+    }
+
+    public static async depositAssetCommandHandler(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string,
+        listItemId: string
+    ) {
+        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, listItemId);
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `${asset.walletAddress}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
+    }
+
+    public static async processTransactionInDemoMode(
+        userPhoneNumber: string,
+        businessPhoneNumberId: string,
+        params: { assetId: string; beneficiaryId: string; usdAmount: string }
+    ) {
+        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, params.assetId);
+
+        // Can only offramp USDC in demo mode
+        if (asset.name !== TokenNames.USDC) {
+            return;
+        }
+
+        const quote = await FiatRampService.getQuotes('NGN', 'NG', 'offramp');
+
+        const numericUsdAmount = parseFloat(params.usdAmount);
+        const fiatAmountToReceive = (quote.rate * numericUsdAmount).toFixed(2);
+
+        const cryptoAmountToDebit = (numericUsdAmount + numericUsdAmount * quote.fee).toFixed(2);
+
+        const { transactionId, hotWalletAddress } = await UserService.sendUserAssetForOfframp(
+            asset,
+            cryptoAmountToDebit
+        );
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `🚀Processing Bank Account Withdrawal\n\nAsset:${asset.name}\nAmount: ${cryptoAmountToDebit} USDC\nEquivalent: ${fiatAmountToReceive} NGN\nTransaction ID: ${transactionId}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
+
+        await UserService.processOfframpTransactionInDemoMode(transactionId, {
+            beneficiaryId: params.beneficiaryId,
+            usdAmount: cryptoAmountToDebit,
+            localAmount: fiatAmountToReceive,
+            tokenAddress: asset.tokenAddress,
+            hotWalletAddress: hotWalletAddress,
+            chainName: asset.network.toUpperCase(),
+            tokenName: 'USDC',
+            userWalletAddress: asset.walletAddress,
+        });
+    }
+
+    public static determineInteractiveButtonReplyAction(
+        interactiveButtonId: string
+    ): InteractiveButtonReplyTypes {
+        if (interactiveButtonId === BaseInteractiveButtonIds.CREATE_WALLET) {
+            return 'create-wallet';
+        }
+
+        if (assetInteractiveButtonsIds.includes(interactiveButtonId as AssetInteractiveButtonIds)) {
+            return 'explore-asset';
+        }
+
+        if (interactiveButtonId.match(SELL_BENEFICIARY_AMOUNT_PATTERN)) {
+            return 'demo-withdraw-amount-to-beneficiary';
+        }
+
+        throw new Error('Unrecognized action');
+    }
+
+    public static determineInteractiveListReplyAction(
+        interactiveListReplyId: string
+    ): InteractiveListReplyTypes {
+        if (interactiveListReplyId.match(ASSET_ACTION_REGEX_PATTERN)) {
+            return 'explore-asset-action';
+        }
+
+        throw new Error('Unrecognized action');
     }
 }
 

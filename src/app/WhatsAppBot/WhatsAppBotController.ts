@@ -5,10 +5,14 @@ import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { WhatsAppMessageType, WhatsAppTextMessage } from '@/app/WhatsAppBot/WhatsAppBotType';
 import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
-import { TokenNames } from '@/Resources/web3/tokens';
 import { isAxiosError } from 'axios';
+import {
+    ASSET_ACTION_REGEX_PATTERN,
+    AssetActionRegexGroups,
+    RATES_COMMAND,
+    WhatsAppMessageType,
+} from '@/app/WhatsAppBot/WhatsAppBotType';
 
 type Message = {
     id: string;
@@ -148,9 +152,10 @@ class WhatsAppBotController {
 
         logger.info(`message : ${type}`);
 
-        if (type === 'text') {
-            if (text.body.toLowerCase() === 'rates') {
-                await WhatsAppBotController.ratesCommandHandler(from, businessPhoneNumberId);
+        // ============== HANDLE TEXT MESSAGES ============== //
+        if (type === WhatsAppMessageType.TEXT) {
+            if (text.body.toLowerCase() === RATES_COMMAND) {
+                await WhatsAppBotService.ratesCommandHandler(from, businessPhoneNumberId);
                 return;
             }
 
@@ -172,192 +177,128 @@ class WhatsAppBotController {
                     from
                 );
             }
-        } else if (type === 'interactive') {
-            logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
-            if (interactive && interactive.type === 'button_reply') {
-                const { button_reply, list_reply } = interactive;
-
-                const interactiveButtonId = button_reply?.id as string;
-                const userWalletId = ['explore-eth', 'explore-usdc-base'];
-                const userSellAssetId = ['sell:explore-eth', 'sell:explore-usdc-base'];
-                const userDepositAssetIds = ['buy:explore-eth', 'buy:explore-usdc-base'];
-
-                if (interactiveButtonId === 'create-wallet') {
-                    const createdNewUser = await UserService.createUser(from, displayName);
-
-                    if (createdNewUser) {
-                        const userAssetsList = await UserService.createUserWallets(from);
-                        await WhatsAppBotService.listWalletAddressMessage(
-                            businessPhoneNumberId,
-                            displayName,
-                            from,
-                            userAssetsList,
-                            'new_account'
-                        );
-                    }
-                } else if (userWalletId.includes(interactiveButtonId)) {
-                    const userAssetInfo = await UserService.getUserAssetInfo(
-                        from,
-                        interactiveButtonId
-                    );
-                    await WhatsAppBotService.walletDetailsMessage(
-                        businessPhoneNumberId,
-                        from,
-                        userAssetInfo
-                    );
-                } else if (userSellAssetId.includes(interactiveButtonId)) {
-                    const usersBeneficiaries = await FiatRampService.getBeneficiaries(
-                        from,
-                        'NG',
-                        'bank'
-                    );
-
-                    await WhatsAppBotService.listBeneficiaryMessage(
-                        businessPhoneNumberId,
-                        from,
-                        usersBeneficiaries,
-                        interactiveButtonId
-                    );
-                } else if (userDepositAssetIds.includes(interactiveButtonId)) {
-                    await WhatsAppBotController.depositAssetCommandHandler(
-                        from,
-                        businessPhoneNumberId,
-                        interactiveButtonId.split(':')[1]
-                    );
-                } else if (interactiveButtonId.match(SELL_BENEFICIARY_AMOUNT_PATTERN)) {
-                    const { sell, beneficiaryId, amount } = interactiveButtonId.match(
-                        SELL_BENEFICIARY_AMOUNT_PATTERN
-                    )?.groups as { sell: string; beneficiaryId: string; amount: string };
-
-                    await WhatsAppBotController.processTransactionInDemoMode(
-                        from,
-                        businessPhoneNumberId,
-                        {
-                            assetId: sell,
-                            beneficiaryId,
-                            usdAmount: amount,
-                        }
-                    );
-                    return;
-                }
-            } else if (interactive && interactive.type === 'list_reply') {
-                const { list_reply } = interactive;
-                const interactiveListId = list_reply?.id as string;
-
-                logger.info(`off-ramp-data : ${interactiveListId}`);
-
-                await WhatsAppBotService.selectAmountMessage(
-                    businessPhoneNumberId,
-                    from,
-                    interactiveListId
-                );
-            } else {
-                logger.info("No interactive message found or type is not 'button_reply'.");
-            }
-        }
-    }
-
-    public static async ratesCommandHandler(
-        userPhoneNumber: string,
-        businessPhoneNumberId: string
-    ) {
-        const rates = await FiatRampService.getAllRates();
-
-        const messagePayload: WhatsAppTextMessage = {
-            type: WhatsAppMessageType.TEXT,
-            text: {
-                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USDC\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
-                preview_url: false,
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: userPhoneNumber,
-        };
-
-        await WhatsAppBotService.sendWhatsappMessage(
-            'POST',
-            `${businessPhoneNumberId}/messages`,
-            messagePayload
-        );
-    }
-
-    public static async depositAssetCommandHandler(
-        userPhoneNumber: string,
-        businessPhoneNumberId: string,
-        listItemId: string
-    ) {
-        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, listItemId);
-
-        const messagePayload: WhatsAppTextMessage = {
-            type: WhatsAppMessageType.TEXT,
-            text: {
-                body: `${asset.walletAddress}`,
-                preview_url: false,
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: userPhoneNumber,
-        };
-
-        await WhatsAppBotService.sendWhatsappMessage(
-            'POST',
-            `${businessPhoneNumberId}/messages`,
-            messagePayload
-        );
-    }
-
-    public static async processTransactionInDemoMode(
-        userPhoneNumber: string,
-        businessPhoneNumberId: string,
-        params: { assetId: string; beneficiaryId: string; usdAmount: string }
-    ) {
-        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, params.assetId);
-
-        // Can only offramp USDC in demo mode
-        if (asset.name !== TokenNames.USDC_BASE) {
             return;
         }
+        // ============== END OF HANDLING TEXT MESSAGES ============== //
 
-        const quote = await FiatRampService.getQuotes('NGN', 'NG', 'offramp');
+        // ============== HANDLE INTERACTIVE MESSAGES ============== //
+        if (type === WhatsAppMessageType.INTERACTIVE && interactive) {
+            logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
-        const numericUsdAmount = parseFloat(params.usdAmount);
-        const fiatAmountToReceive = (quote.rate * numericUsdAmount).toFixed(2);
+            if (interactive.type === 'button_reply' && interactive.button_reply) {
+                const { button_reply } = interactive;
 
-        const cryptoAmountToDebit = (numericUsdAmount + numericUsdAmount * quote.fee).toFixed(2);
+                const interactiveButtonId = button_reply.id;
 
-        const { transactionId, hotWalletAddress } = await UserService.sendUserAssetForOfframp(
-            asset,
-            cryptoAmountToDebit
-        );
+                const interactiveActionResponse =
+                    WhatsAppBotService.determineInteractiveButtonReplyAction(interactiveButtonId);
 
-        const messagePayload: WhatsAppTextMessage = {
-            type: WhatsAppMessageType.TEXT,
-            text: {
-                body: `🚀Processing Bank Account Withdrawal\n\nAsset:${asset.name}\nAmount: ${cryptoAmountToDebit} USDC\nEquivalent: ${fiatAmountToReceive} NGN\nTransaction ID: ${transactionId}`,
-                preview_url: false,
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: userPhoneNumber,
-        };
+                switch (interactiveActionResponse) {
+                    case 'create-wallet':
+                        const createdNewUser = await UserService.createUser(from, displayName);
 
-        await WhatsAppBotService.sendWhatsappMessage(
-            'POST',
-            `${businessPhoneNumberId}/messages`,
-            messagePayload
-        );
+                        if (createdNewUser) {
+                            const userAssetsList = await UserService.createUserWallets(from);
+                            await WhatsAppBotService.listWalletAddressMessage(
+                                businessPhoneNumberId,
+                                displayName,
+                                from,
+                                userAssetsList,
+                                'new_account'
+                            );
+                        }
+                        return;
 
-        await UserService.processOfframpTransactionInDemoMode(transactionId, {
-            beneficiaryId: params.beneficiaryId,
-            usdAmount: cryptoAmountToDebit,
-            localAmount: fiatAmountToReceive,
-            tokenAddress: asset.tokenAddress,
-            hotWalletAddress: hotWalletAddress,
-            chainName: asset.network.toUpperCase(),
-            tokenName: 'USDC',
-            userWalletAddress: asset.walletAddress,
-        });
+                    case 'explore-asset':
+                        const userAssetInfo = await UserService.getUserAssetInfo(
+                            from,
+                            interactiveButtonId
+                        );
+                        await WhatsAppBotService.walletDetailsMessage(
+                            businessPhoneNumberId,
+                            from,
+                            userAssetInfo
+                        );
+                        return;
+
+                    case 'demo-withdraw-amount-to-beneficiary':
+                        const { sell, beneficiaryId, amount } = interactiveButtonId.match(
+                            SELL_BENEFICIARY_AMOUNT_PATTERN
+                        )?.groups as { sell: string; beneficiaryId: string; amount: string };
+
+                        await WhatsAppBotService.processTransactionInDemoMode(
+                            from,
+                            businessPhoneNumberId,
+                            {
+                                assetId: sell,
+                                beneficiaryId,
+                                usdAmount: amount,
+                            }
+                        );
+
+                        return;
+                }
+            }
+
+            if (interactive.type === 'list_reply' && interactive.list_reply) {
+                const { list_reply } = interactive;
+
+                const interactiveListId = list_reply.id;
+
+                const interactiveActionResponse =
+                    WhatsAppBotService.determineInteractiveListReplyAction(interactiveListId);
+
+                switch (interactiveActionResponse) {
+                    case 'demo-withdraw-to-beneficiary':
+                        await WhatsAppBotService.selectAmountMessage(
+                            businessPhoneNumberId,
+                            from,
+                            interactiveListId
+                        );
+                        return;
+                    case 'explore-asset-action':
+                        const { sell, buy, withdraw, deposit } = interactiveListId.match(
+                            ASSET_ACTION_REGEX_PATTERN
+                        )?.groups as AssetActionRegexGroups;
+
+                        if (sell) {
+                            const usersBeneficiaries = await FiatRampService.getBeneficiaries(
+                                from,
+                                'NG',
+                                'bank'
+                            );
+
+                            await WhatsAppBotService.listBeneficiaryMessage(
+                                businessPhoneNumberId,
+                                from,
+                                usersBeneficiaries,
+                                interactiveListId
+                            );
+
+                            return;
+                        }
+
+                        if (buy) {
+                            // TODO: handle buying asset with crypto
+                        }
+
+                        if (withdraw) {
+                            // TODO: handle withdraw asset to wallet
+                        }
+
+                        if (deposit) {
+                            await WhatsAppBotService.depositAssetCommandHandler(
+                                from,
+                                businessPhoneNumberId,
+                                deposit
+                            );
+                        }
+
+                        return;
+                }
+            }
+        }
     }
 }
 

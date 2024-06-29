@@ -1,5 +1,6 @@
 import env from '@/constants/env';
 import { DUMMY_ETH_PRICE, DUMMY_MATIC_PRICE, DUMMY_USD_PRICE } from '@/constants/numbers';
+import { AssetInteractiveButtonIds } from '@/app/WhatsAppBot/WhatsAppBotType';
 
 export enum TokenAddresses {
     USDT_MATIC_MAINNET = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
@@ -9,10 +10,10 @@ export enum TokenAddresses {
 }
 
 export enum TokenNames {
-    USDT_MATIC = 'USDT (MATIC)',
-    USDC_BASE = 'USDC (BASE)',
+    USDT = 'USDT',
+    USDC = 'USDC',
     MATIC = 'MATIC',
-    ETH = 'ETH (BASE)',
+    ETH = 'ETH',
 }
 
 export const usdtPolygonConfig = {
@@ -20,8 +21,8 @@ export const usdtPolygonConfig = {
         env.WEB3_ENVIRONMENT === 'testnet'
             ? TokenAddresses.USDT_MATIC_TESTNET
             : TokenAddresses.USDT_MATIC_MAINNET,
-    tokenName: TokenNames.USDT_MATIC,
-    listItemId: 'explore-usdt-polygon',
+    tokenName: TokenNames.USDT,
+    listItemId: AssetInteractiveButtonIds.USDT_POLYGON,
     network: 'Polygon' as const,
 };
 export const usdcBaseConfig = {
@@ -29,28 +30,28 @@ export const usdcBaseConfig = {
         env.WEB3_ENVIRONMENT === 'testnet'
             ? TokenAddresses.USDC_BASE_TESTNET
             : TokenAddresses.USDC_BASE_MAINNET,
-    tokenName: TokenNames.USDC_BASE,
-    listItemId: 'explore-usdc-base',
+    tokenName: TokenNames.USDC,
+    listItemId: AssetInteractiveButtonIds.USDC_BASE,
     network: 'Base' as const,
 };
 export const maticConfig = {
     tokenName: TokenNames.MATIC,
-    listItemId: 'explore-matic',
+    listItemId: AssetInteractiveButtonIds.MATIC_POLYGON,
     tokenAddress: 'MATIC',
     network: 'Polygon' as const,
 };
 export const ethConfig = {
     tokenName: TokenNames.ETH,
-    listItemId: 'explore-eth',
+    listItemId: AssetInteractiveButtonIds.ETH_BASE,
     tokenAddress: 'ETH',
     network: 'Base' as const,
 };
 
 export const getDummyUsdValue = (tokenName: TokenNames) => {
     switch (tokenName) {
-        case TokenNames.USDT_MATIC:
+        case TokenNames.USDT:
             return DUMMY_USD_PRICE;
-        case TokenNames.USDC_BASE:
+        case TokenNames.USDC:
             return DUMMY_USD_PRICE;
         case TokenNames.MATIC:
             return DUMMY_MATIC_PRICE;

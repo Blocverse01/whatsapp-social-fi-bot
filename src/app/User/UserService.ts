@@ -4,7 +4,7 @@ import { HttpException } from '@/Resources/exceptions/HttpException';
 import env from '@/constants/env';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
-import { UserAssetItem } from '@/app/User/userSchema';
+import { UserAssetInfo, UserAssetItem } from '@/app/User/userSchema';
 import {
     ethConfig,
     getDummyUsdValue,
@@ -172,7 +172,10 @@ class UserService {
         return asset;
     }
 
-    public static async getUserAssetInfo(phoneNumber: string, assetListItemId: string) {
+    public static async getUserAssetInfo(
+        phoneNumber: string,
+        assetListItemId: string
+    ): Promise<UserAssetInfo> {
         const asset = await this.getUserWalletAssetOrThrow(phoneNumber, assetListItemId);
 
         if (!asset) {

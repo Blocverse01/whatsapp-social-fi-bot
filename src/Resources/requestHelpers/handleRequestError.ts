@@ -8,6 +8,14 @@ const isDefaultError = (error: unknown): error is Error => {
     return error instanceof Error;
 };
 
+const logServiceError = (error: unknown, message: string) => {
+    const parsedError = parseUnknownError(error);
+
+    logger.error(message, {
+        ...parsedError,
+    });
+};
+
 const handleRequestError = (error: unknown, response: Response, logOnly?: true) => {
     const parsedError = parseUnknownError(error);
 
@@ -94,4 +102,4 @@ const parseUnknownError = (error: unknown): ParsedError => {
     }
 };
 
-export { handleRequestError, parseUnknownError };
+export { handleRequestError, parseUnknownError, logServiceError };
