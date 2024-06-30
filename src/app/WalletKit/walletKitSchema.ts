@@ -7,14 +7,19 @@ export type SupportedChain = z.infer<typeof supportedChainSchema>;
 
 export const walletControlMode = z.enum(['developer', 'user']);
 
-export const createWalletKitWalletParams = z.object({
-    name: z.string(),
-    network: supportedChainSchema,
-    owner_id: z.string(),
-    control_mode: walletControlMode,
-    developer_secret: z.string(),
-    type: z.enum(['eoa', 'contract']),
-});
+export const createWalletKitWalletParams = z
+    .object({
+        name: z.string(),
+        network: supportedChainSchema,
+        owner_id: z.string(),
+        control_mode: walletControlMode,
+        developer_secret: z.string().optional(),
+        user_pin: z.string().optional(),
+        type: z.enum(['eoa', 'contract']),
+    })
+    .refine((data) => {
+        return data.developer_secret || data.user_pin;
+    }, 'developer_secret or user_pin should be provided');
 
 export type CreateWalletKitWalletParams = z.infer<typeof createWalletKitWalletParams>;
 
@@ -59,14 +64,19 @@ export const transactionResponse = z.object({
 
 export type TransactionResponse = z.infer<typeof transactionResponse>;
 
-export const transferTokenParams = z.object({
-    network: supportedChainSchema,
-    from: z.string(),
-    token: z.string(),
-    recipient: z.string(),
-    amount: z.string(),
-    developer_secret: z.string(),
-});
+export const transferTokenParams = z
+    .object({
+        network: supportedChainSchema,
+        from: z.string(),
+        token: z.string(),
+        recipient: z.string(),
+        amount: z.string(),
+        developer_secret: z.string().optional(),
+        user_pin: z.string().optional(),
+    })
+    .refine((data) => {
+        return data.developer_secret || data.user_pin;
+    }, 'developer_secret or user_pin should be provided');
 
 export type TransferTokenParams = z.infer<typeof transferTokenParams>;
 

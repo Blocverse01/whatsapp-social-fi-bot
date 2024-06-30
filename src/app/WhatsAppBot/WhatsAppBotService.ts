@@ -7,6 +7,7 @@ import {
     InteractiveButtonReplyTypes,
     InteractiveListReplyTypes,
     manageAssetActions,
+    MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
     WhatsAppInteractiveButton,
     WhatsAppInteractiveMessage,
     WhatsAppMessageType,
@@ -28,6 +29,9 @@ import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { TokenNames } from '@/Resources/web3/tokens';
 import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
+import SumSubService from '@/app/SumSub/SumSubService';
+
+type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
 class WhatsAppBotService {
     private static getRequestConfig() {
@@ -53,14 +57,7 @@ class WhatsAppBotService {
 
             logger.info('Message sent successfully');
         } catch (error) {
-            let message = 'Failed to send message';
-
-            if (isAxiosError(error)) {
-                logger.error('Error sending message', { errorResponse: error.response });
-                message = error.response?.data?.message;
-            }
-
-            throw new HttpException(INTERNAL_SERVER_ERROR, message);
+            logServiceError(error, 'Error sending message');
         }
     }
 
@@ -441,8 +438,147 @@ class WhatsAppBotService {
             return 'explore-asset-action';
         }
 
-        // TODO: do a regex check for this use case
-        return 'demo-withdraw-to-beneficiary';
+        if (interactiveListReplyId.match(MORE_CURRENCIES_COMMAND_REGEX_PATTERN)) {
+            return 'return-more-currencies';
+        }
+
+        if (interactiveListReplyId.includes('beneficiaryId')) {
+            return 'demo-withdraw-to-beneficiary';
+        }
+
+        throw new Error('Unrecognized action');
+    }
+
+    private static async sendKycVerificationUrlMessage(phoneParams: PhoneNumberParams) {
+        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+        const kycUrl = await SumSubService.generateKycUrl(userPhoneNumber);
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Please click on the link to verify your identity: ${kycUrl}`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
+    }
+
+    public static async sendSelectSupportedCurrenciesMessage(
+        phoneParams: PhoneNumberParams,
+        assetActionId: Extract<ExploreAssetActions, 'buy' | 'sell'>,
+        purchaseAssetId: AssetInteractiveButtonIds,
+        _sliceFrom = 0,
+        _sliceTo = 9
+    ) {
+        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+
+        const supportedCurrencies = await FiatRampService.getSupportedCurrencies();
+
+        // determine sliceFrom considering _sliceFrom and the available indexes of the array
+        const sliceFrom = Math.min(_sliceFrom, supportedCurrencies.length - 1);
+        // determine sliceTo considering _sliceTo and the available indexes of the array
+        const sliceTo = Math.min(_sliceTo, supportedCurrencies.length);
+
+        // determine if there should be a nextSliceFrom
+        const nextSliceFrom = sliceTo < supportedCurrencies.length ? sliceTo : null;
+        // determine if there should be a nextSliceTo
+        const nextSliceTo = nextSliceFrom ? nextSliceFrom + 9 : null;
+
+        const moreListItem =
+            nextSliceFrom && nextSliceTo
+                ? {
+                      id: `moreCurrencies|${assetActionId}:${purchaseAssetId}|nextSliceFrom:${nextSliceFrom}|nextSliceTo:${nextSliceTo}`,
+                      title: 'More',
+                  }
+                : null;
+
+        const countriesToDisplay = supportedCurrencies.slice(sliceFrom, sliceTo);
+
+        const interactiveMessage: WhatsAppInteractiveMessage = {
+            type: 'interactive',
+            interactive: {
+                type: 'list',
+                body: {
+                    text: 'Select your local currency',
+                },
+                header: {
+                    type: 'text',
+                    text: 'Choose a Currency',
+                },
+                action: {
+                    button: 'Currencies',
+                    sections: [
+                        {
+                            rows: [
+                                ...countriesToDisplay.map((country) => {
+                                    return {
+                                        id: `${assetActionId}:${purchaseAssetId}|currency:${country.code}`,
+                                        title: country.country,
+                                        description: `Currency: ${country.currencySymbol}`,
+                                    };
+                                }),
+                                // Add moreListItem only if it's not null
+                                ...(moreListItem ? [moreListItem] : []),
+                            ],
+                        },
+                    ],
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
+    }
+
+    private static async sendKycInReviewMessage(phoneParams: PhoneNumberParams) {
+        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Your KYC is currently under review. We'll notify you once it's completed.`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
+    }
+
+    public static async handleBuyAssetAction(
+        phoneParams: PhoneNumberParams,
+        assetId: AssetInteractiveButtonIds
+    ) {
+        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+        const userKycStatus = await UserService.getUserKycStatus(userPhoneNumber);
+
+        if (
+            userKycStatus === 'unverified' ||
+            userKycStatus === 'rejected' ||
+            userKycStatus === 'pending'
+        ) {
+            await this.sendKycVerificationUrlMessage(phoneParams);
+            return;
+        }
+
+        if (userKycStatus === 'in_review') {
+            await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
+            return;
+        }
+
+        await this.sendSelectSupportedCurrenciesMessage(
+            phoneParams,
+            ExploreAssetActions.BUY_ASSET,
+            assetId
+        );
     }
 }
 

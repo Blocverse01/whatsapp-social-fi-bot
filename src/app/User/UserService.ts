@@ -4,7 +4,7 @@ import { HttpException } from '@/Resources/exceptions/HttpException';
 import env from '@/constants/env';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
-import { UserAssetInfo, UserAssetItem } from '@/app/User/userSchema';
+import { KycStatus, UserAssetInfo, UserAssetItem } from '@/app/User/userSchema';
 import {
     ethConfig,
     getDummyUsdValue,
@@ -100,7 +100,7 @@ class UserService {
                 network: chain,
                 control_mode: 'developer',
                 type: 'contract',
-                developer_secret: env.DEVELOPER_SECRET,
+                developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
             })
         );
 
@@ -205,7 +205,7 @@ class UserService {
 
         const transactionResponse = await WalletKitService.transferToken({
             network: asset.network,
-            developer_secret: env.DEVELOPER_SECRET,
+            developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
             from: asset.walletAddress,
             token: asset.tokenAddress,
             recipient: hotWalletAddress,
@@ -248,6 +248,29 @@ class UserService {
                 userWalletAddress: params.userWalletAddress,
                 hotWalletAddress: params.hotWalletAddress,
             });
+        }
+    }
+
+    public static async getUserKycStatus(phoneNumber: string): Promise<KycStatus> {
+        const user = await this.getUserByPhoneNumber(phoneNumber);
+
+        if (!user) {
+            throw new HttpException(BAD_REQUEST, 'User not found');
+        }
+
+        if (!user.kycStatus?.trim()) {
+            return 'unverified';
+        }
+
+        switch (user.kycStatus) {
+            case 'VERIFIED':
+                return 'verified';
+            case 'IN_REVIEW':
+                return 'in_review';
+            case 'REJECTED':
+                return 'rejected';
+            default:
+                return 'pending';
         }
     }
 }

@@ -10,6 +10,8 @@ import { isAxiosError } from 'axios';
 import {
     ASSET_ACTION_REGEX_PATTERN,
     AssetActionRegexMatch,
+    MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
+    MoreCurrenciesCommandMatch,
     RATES_COMMAND,
     WhatsAppMessageType,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
@@ -242,6 +244,8 @@ class WhatsAppBotController {
             }
 
             if (interactive.type === 'list_reply' && interactive.list_reply) {
+                const phoneParams = { userPhoneNumber: from, businessPhoneNumberId };
+
                 const { list_reply } = interactive;
 
                 const interactiveListId = list_reply.id;
@@ -257,6 +261,28 @@ class WhatsAppBotController {
                             interactiveListId
                         );
                         return;
+
+                    case 'return-more-currencies':
+                        const [
+                            __interactiveListId,
+                            assetActionId,
+                            purchaseAssetId,
+                            nextSliceFrom,
+                            nextSliceTo,
+                        ] = interactiveListId.match(
+                            MORE_CURRENCIES_COMMAND_REGEX_PATTERN
+                        ) as MoreCurrenciesCommandMatch;
+
+                        await WhatsAppBotService.sendSelectSupportedCurrenciesMessage(
+                            phoneParams,
+                            assetActionId,
+                            purchaseAssetId,
+                            parseInt(nextSliceFrom),
+                            parseInt(nextSliceTo)
+                        );
+
+                        return;
+
                     case 'explore-asset-action':
                         const [_interactiveListId, assetAction, assetId] = interactiveListId.match(
                             ASSET_ACTION_REGEX_PATTERN
@@ -284,7 +310,12 @@ class WhatsAppBotController {
                         }
 
                         if (assetAction === 'buy') {
-                            // TODO: handle buying asset with crypto
+                            await WhatsAppBotService.handleBuyAssetAction(
+                                { userPhoneNumber: from, businessPhoneNumberId },
+                                assetId
+                            );
+
+                            return;
                         }
 
                         if (assetAction === 'withdraw') {

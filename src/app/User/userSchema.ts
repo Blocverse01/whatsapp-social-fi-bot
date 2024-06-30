@@ -21,3 +21,7 @@ export const userAssetInfoSchema = z.object({
 });
 
 export type UserAssetInfo = z.infer<typeof userAssetInfoSchema>;
+
+export const kycStatus = z.enum(['verified', 'in_review', 'unverified', 'rejected', 'pending']);
+
+export type KycStatus = z.infer<typeof kycStatus>;

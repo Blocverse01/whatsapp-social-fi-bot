@@ -23,12 +23,19 @@ import {
 import axios from 'axios';
 
 class WalletKitService {
-    private static API_URL = env.WALLET_KIT_API_URL;
+    private static API_URL =
+        env.WEB3_ENVIRONMENT === 'testnet'
+            ? env.WALLET_KIT_API_URL
+            : env.WALLET_KIT_MAINNET_API_URL;
 
     private static get requiredRequestHeaders() {
+        const apiToken =
+            env.WEB3_ENVIRONMENT === 'testnet'
+                ? env.WALLET_KIT_API_TOKEN
+                : env.WALLET_KIT_MAINNET_API_TOKEN;
         return {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${env.WALLET_KIT_API_TOKEN}`,
+            Authorization: `Bearer ${apiToken}`,
             'X-WalletKit-Project-ID': env.WALLET_KIT_PROJECT_ID,
         };
     }
