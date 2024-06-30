@@ -40,6 +40,7 @@ const envSchema = z.object({
     CDP_KEY_NAME: notEmptyStringSchema('CDP_KEY_NAME'),
     CDP_KEY_SECRET: notEmptyStringSchema('CDP_KEY_SECRET'),
     CDP_PROJECT_ID: notEmptyStringSchema('CDP_PROJECT_ID'),
+    WA_PHONE_NUMBER_ID: notEmptyStringSchema('WA_PHONE_NUMBER_ID'),
 });
 
 const env = envSchema.parse(process.env);

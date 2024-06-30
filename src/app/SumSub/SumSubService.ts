@@ -11,6 +11,7 @@ import { UserRecord } from '@/Db/xata';
 import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
 import axios from 'axios';
+import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
 
 type UsedSumSubRequestMethods = 'GET' | 'POST';
 
@@ -259,11 +260,15 @@ class SumSubService {
                 if (isVerified) {
                     const userInfo = SumSubService.extractUserInformation(applicantData!);
 
+                    await WhatsAppBotService.sendKycVerifiedMessage(user.phoneNumber!);
+
                     return await UserService.updateUserInfoFromKyc(user, {
                         ...userInfo,
                         kycStatus: 'VERIFIED',
                     });
                 }
+
+                await WhatsAppBotService.sendKycRejectedMessage(user.phoneNumber!);
 
                 await UserService.updateUserKycStatus(user, 'REJECTED');
             },

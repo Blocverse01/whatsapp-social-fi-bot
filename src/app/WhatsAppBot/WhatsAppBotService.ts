@@ -13,10 +13,8 @@ import {
     WhatsAppMessageType,
     WhatsAppTextMessage,
 } from './WhatsAppBotType';
-import axios, { isAxiosError } from 'axios';
+import axios from 'axios';
 import env from '@/constants/env';
-import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
-import { HttpException } from '@/Resources/exceptions/HttpException';
 import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
 import { UserAssetItem } from '@/app/User/userSchema';
