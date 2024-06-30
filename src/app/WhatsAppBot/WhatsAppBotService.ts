@@ -34,6 +34,8 @@ import SumSubService from '@/app/SumSub/SumSubService';
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
 class WhatsAppBotService {
+    private static WA_BUSINESS_PHONE_NUMBER = env.WA_PHONE_NUMBER_ID;
+
     private static getRequestConfig() {
         return {
             headers: {
@@ -579,6 +581,36 @@ class WhatsAppBotService {
             ExploreAssetActions.BUY_ASSET,
             assetId
         );
+    }
+
+    public static async sendKycVerifiedMessage(userPhoneNumber: string) {
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Your KYC has been successfully verified🎉\nYou now have access to all functionalities`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
+    }
+
+    public static async sendKycRejectedMessage(userPhoneNumber: string) {
+        const messagePayload: WhatsAppTextMessage = {
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                body: `Your KYC has been rejected. Please re-verify your identity.`,
+                preview_url: false,
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: userPhoneNumber,
+        };
+
+        await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
     }
 }
 
