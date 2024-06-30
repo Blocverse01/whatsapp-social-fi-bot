@@ -95,22 +95,22 @@ export const manageAssetActions: Array<AssetAction> = [
     {
         text: 'Buy With Fiat',
         action: ExploreAssetActions.BUY_ASSET,
-        description: 'Buy asset with your local currency',
+        description: 'Buy crypto asset with your local currency',
     },
     {
         text: 'Deposit From Wallet',
         action: ExploreAssetActions.DEPOSIT,
-        description: 'Deposit asset from a wallet outside BlocPal',
+        description: 'Deposit crypto asset from a wallet outside BlocPal',
     },
     {
         text: 'Withdraw To Wallet',
         action: ExploreAssetActions.WITHDRAW_ASSET,
-        description: 'Send asset to a wallet outside BlocPal',
+        description: 'Send crypto asset to a wallet outside BlocPal',
     },
     {
-        text: 'Withdraw as Fiat',
+        text: 'Sell',
         action: ExploreAssetActions.SELL_ASSET,
-        description: 'Withdraw asset to your local currency',
+        description: 'Convert crypto asset to your local currency',
     },
 ];
 
