@@ -247,14 +247,14 @@ describe('FiatRampService', () => {
             async () => {
                 const transactionPayload: SendOfframpRequestPayload = {
                     beneficiaryId: 'rec_cppfpjc5j7ivr69md950',
-                    localAmount: 2950,
+                    localAmount: 14900,
                     chainName: 'BEP20',
                     tokenName: 'USDT',
-                    userWalletAddress: '0x2C0a6a30fAe9872513609819f667efA7e539021E',
+                    userWalletAddress: '0x4d81Cb192C26F50C31870053Fae9A7C84c8fC0c6',
                     hotWalletAddress: '0xd73594Ddc43B368719a0003BcC1a520c17a16DeB',
-                    usdAmount: 2.02,
+                    usdAmount: 10.1,
                     tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
-                    txHash: '0xab190f51ef8f330bc38b3ad938e2c5e23ffdb46b218310b5dcf11976973265ed',
+                    txHash: '0xab190f51ef8f330bc38b3ad938e2c5e23ffdb46b218310b5dcf11976973265ed_test',
                 };
 
                 const response = await FiatRampService.postOfframpTransaction(transactionPayload);

@@ -28,6 +28,12 @@ import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { TokenNames } from '@/Resources/web3/tokens';
 import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
 import SumSubService from '@/app/SumSub/SumSubService';
+import crypto from 'node:crypto';
+import {
+    convertBase64ToAsciiString,
+    decryptRequest,
+    encryptResponse,
+} from '@/Resources/utils/encryption';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -609,6 +615,20 @@ class WhatsAppBotService {
         };
 
         await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
+    }
+
+    public static decryptFlowRequest(body: Record<string, string>) {
+        const privatePem = convertBase64ToAsciiString(env.WA_FLOW_PRIVATE_KEY);
+
+        return decryptRequest(body, privatePem, env.WA_FLOW_PRIVATE_KEY_SEED_PHRASE);
+    }
+
+    public static encryptFlowResponse(
+        response: unknown,
+        aesKeyBuffer: Buffer,
+        initialVectorBuffer: Buffer
+    ) {
+        return encryptResponse(response, aesKeyBuffer, initialVectorBuffer);
     }
 }
 
