@@ -49,7 +49,7 @@ export interface WhatsAppInteractiveMessage extends WhatsAppMessageBase {
                 flow_token: string;
                 flow_id: string;
                 flow_cta: string;
-                flow_action: 'navigate' | 'INIT';
+                flow_action: 'navigate' | 'data_exchange';
                 flow_action_payload: {
                     screen: string;
                     data: Record<string, unknown>;

@@ -293,7 +293,7 @@ class WhatsAppBotService {
                         flow_token: crypto.randomBytes(16).toString('hex'),
                         flow_id: '980070373602833',
                         flow_cta: 'Sell Asset',
-                        flow_action: 'INIT',
+                        flow_action: 'navigate',
                         flow_action_payload: {
                             screen: 'AMOUNT_INPUT',
                             data: {
