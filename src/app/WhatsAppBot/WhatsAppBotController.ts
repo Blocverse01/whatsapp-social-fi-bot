@@ -5,7 +5,10 @@ import UserService from '@/app/User/UserService';
 import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
+import {
+    SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
+    SELL_BENEFICIARY_AMOUNT_PATTERN,
+} from '@/constants/regex';
 import { isAxiosError } from 'axios';
 import {
     ASSET_ACTION_REGEX_PATTERN,
@@ -260,7 +263,9 @@ class WhatsAppBotController {
 
                 switch (interactiveActionResponse) {
                     case 'trigger-offramp-flow':
-                        const data = interactiveListId.match(SELL_BENEFICIARY_AMOUNT_PATTERN);
+                        const data = interactiveListId.match(
+                            SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN
+                        );
 
                         console.log('data', data);
                         //await WhatsAppBotService.beginOfframpFlowMessage({businessPhoneNumberId, recipient: from, assetId: });
