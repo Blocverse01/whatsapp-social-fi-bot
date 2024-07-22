@@ -136,6 +136,7 @@ export type InteractiveButtonReplyTypes =
     | 'demo-withdraw-amount-to-beneficiary';
 export type InteractiveListReplyTypes =
     | 'explore-asset-action'
+    | 'explore-asset'
     | 'trigger-offramp-flow'
     | 'return-more-currencies';
 

@@ -8,7 +8,7 @@ import {
     InteractiveListReplyTypes,
     manageAssetActions,
     MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
-    WhatsAppInteractiveButton,
+    //WhatsAppInteractiveButton,
     WhatsAppInteractiveMessage,
     WhatsAppMessageType,
     WhatsAppTextMessage,
@@ -38,6 +38,7 @@ import {
     encryptResponse,
 } from '@/Resources/utils/encryption';
 import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
+import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -80,35 +81,50 @@ class WhatsAppBotService {
     ) {
         const text =
             accountType === 'new_account'
-                ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on an asset to display the wallet address and balance`
-                : `Click on an asset to display the wallet address and balance`;
+                ? `Congrats ${displayName}, welcome aboard 🎉\n\nWe've created decentralized wallets for you. It's like opening a digital piggy bank! 🐷💰.\n\nClick on manage assets to display your assets`
+                : `Click on manage assets to display your assets`;
 
-        const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
-            .map((asset) => ({
-                type: 'reply' as const,
-                reply: {
+        const interactiveListMessage: WhatsAppInteractiveMessage =
+            MessageGenerators.generateInteractiveListMessage({
+                recipient,
+                listItems: walletAssets.map((asset) => ({
                     id: asset.listItemId,
-                    title: `${asset.name} (${asset.network.toUpperCase()})`,
-                },
-            }))
-            .slice(0, 2);
+                    title: `${asset.name} (${asset.network})`,
+                    description: `${asset.name} on ${asset.network}`,
+                })),
+                bodyText: text,
+                headerText: 'Your Assets',
+                actionButtonText: 'Manage Assets',
+            });
 
-        const interactiveMessage: WhatsAppInteractiveMessage = {
-            type: 'interactive',
-            interactive: {
-                type: 'button',
-                body: {
-                    text: text,
-                },
-                action: {
-                    buttons: walletAssetsButton,
-                },
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: recipient,
-        };
-        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
+        // TODO: Complete migration to new implementation and remove dead code.
+
+        // const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
+        //     .map((asset) => ({
+        //         type: 'reply' as const,
+        //         reply: {
+        //             id: asset.listItemId,
+        //             title: `${asset.name} (${asset.network.toUpperCase()})`,
+        //         },
+        //     }))
+        //     .slice(0, 2);
+
+        // const interactiveMessage: WhatsAppInteractiveMessage = {
+        //     type: 'interactive',
+        //     interactive: {
+        //         type: 'button',
+        //         body: {
+        //             text: text,
+        //         },
+        //         action: {
+        //             buttons: walletAssetsButton,
+        //         },
+        //     },
+        //     messaging_product: 'whatsapp',
+        //     recipient_type: 'individual',
+        //     to: recipient,
+        // };
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveListMessage);
     }
 
     public static async listBeneficiaryMessage(
@@ -189,7 +205,7 @@ class WhatsAppBotService {
             interactive: {
                 type: 'list',
                 body: {
-                    text: `Asset Balance 💰: ${tokenBalance} \n\nAsset Balance(USD) 💰: ${usdDisplayBalance} \n\nWallet Address: ${walletAddress}`,
+                    text: `Asset Balance 💰: ${tokenBalance}\n\nAsset Balance(USD) 💰: ${usdDisplayBalance}\n\nWallet Address: ${walletAddress}`,
                 },
                 header: {
                     type: 'text',
@@ -294,6 +310,9 @@ class WhatsAppBotService {
         await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);
     }
 
+    /**
+     * @deprecated
+     */
     public static async selectAmountMessage(
         businessPhoneNumberId: string,
         recipient: string,
@@ -468,6 +487,12 @@ class WhatsAppBotService {
     public static determineInteractiveListReplyAction(
         interactiveListReplyId: string
     ): InteractiveListReplyTypes {
+        if (
+            assetInteractiveButtonsIds.includes(interactiveListReplyId as AssetInteractiveButtonIds)
+        ) {
+            return 'explore-asset';
+        }
+
         if (interactiveListReplyId.match(ASSET_ACTION_REGEX_PATTERN)) {
             return 'explore-asset-action';
         }

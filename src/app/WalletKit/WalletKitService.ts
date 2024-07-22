@@ -121,10 +121,11 @@ class WalletKitService {
         return response.data;
     }
 
-    public static async waitForTransactionHashAndStatus(transactionId: string) {
+    public static async waitForTransactionHash(transactionId: string) {
         let transaction = await this.getTransactionById(transactionId);
 
-        while (transaction.status === 'submitted' && !transaction.transaction_hash) {
+        // Keep polling as long as transaction_hash is not set, regardless of the transaction status.
+        while (!transaction.transaction_hash) {
             await new Promise((resolve) => setTimeout(resolve, 3000));
             transaction = await this.getTransactionById(transactionId);
         }

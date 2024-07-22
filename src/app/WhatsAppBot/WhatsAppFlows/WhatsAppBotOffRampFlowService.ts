@@ -6,14 +6,18 @@ import {
 import crypto from 'node:crypto';
 import { AssetConfig, getAssetConfigOrThrow, TokenNames } from '@/Resources/web3/tokens';
 import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
-import { TRANSACTION_FEE_PERCENTAGE } from '@/constants/numbers';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { BankBeneficiary, MobileMoneyBeneficiary } from '@/app/FiatRamp/fiatRampSchema';
+import {
+    BankBeneficiary,
+    MobileMoneyBeneficiary,
+    SendOfframpRequestPayload,
+} from '@/app/FiatRamp/fiatRampSchema';
 import { defaultAmountFixer, formatNumberAsCurrency } from '@/Resources/utils/currency';
 import UserService from '@/app/User/UserService';
 import { CountryCode } from 'libphonenumber-js';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
+import logger from '@/Resources/logger';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -98,6 +102,8 @@ class WhatsAppBotOffRampFlowService {
                 throw new Error('Unhandled screen');
             }
 
+            console.log(nextScreenData);
+
             return {
                 ...nextScreenData,
                 version: requestBody.version,
@@ -140,13 +146,15 @@ class WhatsAppBotOffRampFlowService {
         const { amount, asset_id, beneficiary, user_id } = input;
 
         const assetConfig = getAssetConfigOrThrow(asset_id);
-        const { rate: conversionRate, fee: transactionFee } = await FiatRampService.getQuotes(
+        const { rate: conversionRate, fee } = await FiatRampService.getQuotes(
             beneficiary.currency_symbol,
             beneficiary.country_code as CountryCode,
             'offramp'
         );
 
         const amountAsNumber = parseFloat(amount.trim());
+        const transactionFee = defaultAmountFixer(amountAsNumber * fee);
+
         const token_amount: TokenAmountPattern = this.generateTokenAmountPattern(
             amountAsNumber,
             assetConfig,
@@ -214,6 +222,7 @@ class WhatsAppBotOffRampFlowService {
                     : OffRampFlowScreens.ERROR_FEEDBACK,
             data: {
                 status: response.status[0].toUpperCase() + response.status.slice(1),
+                message: response.message,
             },
         };
     }
@@ -234,9 +243,11 @@ class WhatsAppBotOffRampFlowService {
         const assetBalance = parseFloat(walletInfo.tokenBalance);
 
         if (assetBalance < tokenAmountToDebit) {
+            const insufficientBalanceMessage = `You're trying to pay: ${tokenAmountToDebit} ${assetConfig.tokenName}\nYou have only: ${assetBalance} ${assetConfig.tokenName}`;
+
             return {
                 status: 'failed',
-                message: 'Insufficient balance',
+                message: insufficientBalanceMessage,
             };
         }
 
@@ -252,24 +263,28 @@ class WhatsAppBotOffRampFlowService {
                 tokenAmountToDebit.toString()
             );
 
-            const transaction =
-                await WalletKitService.waitForTransactionHashAndStatus(transactionId);
-
-            await FiatRampService.postOfframpTransaction({
-                beneficiaryId: beneficiaryId,
+            // Process in background and return early processing response
+            this.processOfframpInBackground(transactionId, {
+                beneficiaryId,
                 usdAmount: tokenAmount,
                 localAmount: fiatAmount,
                 tokenAddress: assetConfig.tokenAddress,
-                hotWalletAddress,
                 chainName: assetConfig.network,
                 tokenName: assetConfig.tokenName,
                 userWalletAddress: walletInfo.walletAddress,
-                txHash: transaction.transaction_hash,
-            });
+                hotWalletAddress,
+            })
+                .then((r) =>
+                    logger.info(`Offramp request sent for transactionId: ${transactionId}`)
+                )
+                .catch((e) =>
+                    logServiceError(e, `Offramp request failed for transactionId: ${transactionId}`)
+                );
 
             return {
                 status: 'processing',
-                message: 'Transaction successful',
+                message:
+                    "Your transaction is currently being processed, we'd send updates on the status of your transaction in your DM",
             };
         } catch (error) {
             logServiceError(error, 'Processing offramp transaction failed');
@@ -278,6 +293,32 @@ class WhatsAppBotOffRampFlowService {
                 status: 'failed',
                 message: 'Transaction failed',
             };
+        }
+    }
+
+    public static async processOfframpInBackground(
+        onChainTransactionId: string,
+        offrampParams: Omit<SendOfframpRequestPayload, 'txHash'>
+    ) {
+        const transactionDetails = await WalletKitService.getTransactionById(onChainTransactionId);
+
+        if (transactionDetails.status === 'submitted') {
+            setTimeout(() => {
+                this.processOfframpInBackground(onChainTransactionId, offrampParams);
+            }, 5000);
+        }
+
+        if (transactionDetails.status === 'success' && transactionDetails.transaction_hash) {
+            try {
+                await FiatRampService.postOfframpTransaction({
+                    ...offrampParams,
+                    txHash: transactionDetails.transaction_hash,
+                    chainName: offrampParams.chainName.toUpperCase(),
+                    tokenName: offrampParams.tokenName.toUpperCase(),
+                });
+            } catch (error) {
+                logServiceError(error, 'Processing offramp transaction failed');
+            }
         }
     }
 
