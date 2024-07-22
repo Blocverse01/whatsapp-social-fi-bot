@@ -6,7 +6,7 @@ export const SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN =
 
 // create a regex pattern from `sellAssetToBeneficiary:${assetId}|beneficiaryAction:chooseExisting`
 export const SELL_ASSET_DESTINATION_CHOICE_REGEX =
-    /sellAssetToBeneficiary:(?<assetId>[^|]+)\|beneficiaryAction:(?<action>[^|]+)/;
+    /sell:(?<assetId>[^|]+)\|beneficiaryAction:(?<action>[^|]+)/;
 
 export type SellAssetToBeneficiaryMatchGroups = {
     sell: string;
@@ -14,7 +14,7 @@ export type SellAssetToBeneficiaryMatchGroups = {
 };
 
 export type SellAssetDestinationChoiceMatchGroups = {
-    assetId: string;
+    sell: string;
     beneficiaryAction: 'chooseExisting' | 'addNew';
 };
 

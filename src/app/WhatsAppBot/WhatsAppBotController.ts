@@ -249,7 +249,7 @@ class WhatsAppBotController {
                         return;
 
                     case 'sell-asset-destination-choice':
-                        const { assetId, beneficiaryAction } =
+                        const { sell: assetId, beneficiaryAction } =
                             extractSellAssetDestinationChoiceGroups(interactiveButtonId);
 
                         if (beneficiaryAction === 'chooseExisting') {
@@ -263,7 +263,7 @@ class WhatsAppBotController {
                                 businessPhoneNumberId,
                                 from,
                                 usersBeneficiaries,
-                                interactiveButtonId
+                                assetId
                             );
                         }
 

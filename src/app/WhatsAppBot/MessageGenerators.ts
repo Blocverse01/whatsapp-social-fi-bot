@@ -1,5 +1,4 @@
 import {
-    BaseInteractiveButtonIds,
     WhatsAppInteractiveMessage,
     WhatsAppMessageType,
     WhatsAppTextMessage,
