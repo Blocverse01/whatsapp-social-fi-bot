@@ -15,6 +15,8 @@ import {
 } from '@/Resources/web3/tokens';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { UserRecord } from '@/Db/xata';
+import { fixNumber, formatNumberAsCurrency } from '@/Resources/utils/currency';
+import { THREE } from '@/constants/numbers';
 
 class UserService {
     private static USER_TABLE = dbClient.User;
@@ -188,11 +190,15 @@ class UserService {
             asset.tokenAddress
         );
 
-        const usdBalance = getDummyUsdValue(asset.name as TokenNames) * parseFloat(tokenBalance);
+        const tokenBalanceAsNumber = parseFloat(tokenBalance);
+        const usdBalance = getDummyUsdValue(asset.name as TokenNames) * tokenBalanceAsNumber;
+
+        const usdBalanceDisplay = formatNumberAsCurrency(fixNumber(usdBalance, THREE), 'USD');
+        const tokenBalanceDisplay = formatNumberAsCurrency(tokenBalanceAsNumber, asset.name);
 
         return {
-            usdDisplayBalance: `$${usdBalance.toFixed(3)}`,
-            tokenBalance: tokenBalance,
+            usdDisplayBalance: usdBalanceDisplay,
+            tokenBalance: tokenBalanceDisplay,
             walletAddress: asset.walletAddress,
             listItemId: assetListItemId,
             assetName: asset.name,

@@ -29,6 +29,7 @@ import { getAssetConfigOrThrow, TokenNames } from '@/Resources/web3/tokens';
 import {
     SELL_BENEFICIARY_AMOUNT_PATTERN,
     SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
+    SELL_ASSET_DESTINATION_CHOICE_REGEX,
 } from '@/constants/regex';
 import SumSubService from '@/app/SumSub/SumSubService';
 import {
@@ -126,6 +127,30 @@ class WhatsAppBotService {
         //     to: recipient,
         // };
         await this.sendWhatsappMessage(businessPhoneNumberId, interactiveListMessage);
+    }
+
+    public static async offrampDestinationChoiceMessage(
+        phoneParams: PhoneNumberParams,
+        assetId: string
+    ) {
+        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+
+        const interactiveButtonMessage = MessageGenerators.generateInteractiveButtonMessage({
+            recipient: userPhoneNumber,
+            bodyText: 'Do you want to choose an existing beneficiary or add a new one?',
+            replyButtons: [
+                {
+                    id: `sellAssetToBeneficiary:${assetId}|beneficiaryAction:chooseExisting`,
+                    title: 'Choose Existing',
+                },
+                {
+                    id: `sellAssetToBeneficiary:${assetId}|beneficiaryAction:addNew`,
+                    title: 'Add New',
+                },
+            ],
+        });
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveButtonMessage);
     }
 
     public static async listBeneficiaryMessage(
@@ -475,12 +500,16 @@ class WhatsAppBotService {
             return 'create-wallet';
         }
 
-        if (assetInteractiveButtonsIds.includes(interactiveButtonId as AssetInteractiveButtonIds)) {
-            return 'explore-asset';
+        if (interactiveButtonId.match(SELL_ASSET_DESTINATION_CHOICE_REGEX)) {
+            return 'sell-asset-destination-choice';
         }
 
         if (interactiveButtonId.match(SELL_BENEFICIARY_AMOUNT_PATTERN)) {
             return 'demo-withdraw-amount-to-beneficiary';
+        }
+
+        if (assetInteractiveButtonsIds.includes(interactiveButtonId as AssetInteractiveButtonIds)) {
+            return 'explore-asset';
         }
 
         throw new Error('Unrecognized action');

@@ -1,4 +1,9 @@
-import { WhatsAppInteractiveMessage, WhatsAppMessageType } from '@/app/WhatsAppBot/WhatsAppBotType';
+import {
+    BaseInteractiveButtonIds,
+    WhatsAppInteractiveMessage,
+    WhatsAppMessageType,
+    WhatsAppTextMessage,
+} from '@/app/WhatsAppBot/WhatsAppBotType';
 
 type GenerateInteractiveListMessageParams = {
     listItems: Array<{
@@ -10,6 +15,14 @@ type GenerateInteractiveListMessageParams = {
     headerText: string;
     actionButtonText: string;
     recipient: string;
+};
+type GenerateInteractiveButtonMessageParams = {
+    recipient: string;
+    bodyText: string;
+    replyButtons: Array<{
+        id: string;
+        title: string;
+    }>;
 };
 
 class MessageGenerators {
@@ -39,6 +52,42 @@ class MessageGenerators {
                     ],
                 },
             },
+        } satisfies WhatsAppInteractiveMessage;
+    }
+
+    public static generateTextMessage(recipient: string, text: string) {
+        return {
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient,
+            type: WhatsAppMessageType.TEXT,
+            text: {
+                preview_url: true,
+                body: text,
+            },
+        } satisfies WhatsAppTextMessage;
+    }
+
+    public static generateInteractiveButtonMessage(params: GenerateInteractiveButtonMessageParams) {
+        const { recipient, replyButtons, bodyText } = params;
+
+        return {
+            type: 'interactive',
+            interactive: {
+                type: 'button',
+                body: {
+                    text: bodyText,
+                },
+                action: {
+                    buttons: replyButtons.map((replyButton) => ({
+                        type: 'reply',
+                        reply: replyButton,
+                    })),
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient,
         } satisfies WhatsAppInteractiveMessage;
     }
 }

@@ -6,6 +6,7 @@ import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import {
+    extractSellAssetDestinationChoiceGroups,
     extractSellAssetToBeneficiaryGroups,
     SELL_BENEFICIARY_AMOUNT_PATTERN,
 } from '@/constants/regex';
@@ -246,6 +247,31 @@ class WhatsAppBotController {
                         );
 
                         return;
+
+                    case 'sell-asset-destination-choice':
+                        const { assetId, beneficiaryAction } =
+                            extractSellAssetDestinationChoiceGroups(interactiveButtonId);
+
+                        if (beneficiaryAction === 'chooseExisting') {
+                            const usersBeneficiaries = await FiatRampService.getBeneficiaries(
+                                from,
+                                'NG',
+                                'bank'
+                            );
+
+                            await WhatsAppBotService.listBeneficiaryMessage(
+                                businessPhoneNumberId,
+                                from,
+                                usersBeneficiaries,
+                                interactiveButtonId
+                            );
+                        }
+
+                        if (beneficiaryAction === 'addNew') {
+                            // TODO: handle adding new beneficiary
+                        }
+
+                        return;
                 }
             }
 
@@ -315,17 +341,12 @@ class WhatsAppBotController {
                         });
 
                         if (assetAction === 'sell') {
-                            const usersBeneficiaries = await FiatRampService.getBeneficiaries(
-                                from,
-                                'NG',
-                                'bank'
-                            );
-
-                            await WhatsAppBotService.listBeneficiaryMessage(
-                                businessPhoneNumberId,
-                                from,
-                                usersBeneficiaries,
-                                interactiveListId
+                            await WhatsAppBotService.offrampDestinationChoiceMessage(
+                                {
+                                    userPhoneNumber: from,
+                                    businessPhoneNumberId,
+                                },
+                                assetId
                             );
 
                             return;

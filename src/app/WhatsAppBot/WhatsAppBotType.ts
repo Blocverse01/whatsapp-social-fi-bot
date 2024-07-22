@@ -133,6 +133,7 @@ export const manageAssetActions: Array<AssetAction> = [
 export type InteractiveButtonReplyTypes =
     | 'create-wallet'
     | 'explore-asset'
+    | 'sell-asset-destination-choice'
     | 'demo-withdraw-amount-to-beneficiary';
 export type InteractiveListReplyTypes =
     | 'explore-asset-action'

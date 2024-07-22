@@ -1,5 +1,6 @@
 export const ONE = 1;
 export const TWO = 2;
+export const THREE = 3;
 export const HUNDRED = 100;
 export const TEN_THOUSAND = 10000;
 export const DUMMY_ETH_PRICE = 3552.93;
