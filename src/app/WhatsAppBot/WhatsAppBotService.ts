@@ -146,7 +146,7 @@ class WhatsAppBotService {
                                 } else {
                                     const bankBeneficiaryCast = beneficiary as BankBeneficiary;
                                     title = `${bankBeneficiaryCast.accountName}`;
-                                    description = `Bank Name: ${bankBeneficiaryCast.bankName} \nAccount Number: ${bankBeneficiaryCast.accountNumber}`;
+                                    description = `Bank Name: ${bankBeneficiaryCast.bankName}\nAccount Number: ${bankBeneficiaryCast.accountNumber}`;
                                 }
                                 return {
                                     id: `${assetId}|beneficiaryId:${beneficiary.id}`,
@@ -287,7 +287,7 @@ class WhatsAppBotService {
                     text: `Sell ${asset.name} (${asset.network})`,
                 },
                 action: {
-                    name: 'offramp_flow',
+                    name: 'flow',
                     parameters: {
                         flow_message_version: '3',
                         flow_token: crypto.randomBytes(16).toString('hex'),
