@@ -93,7 +93,7 @@ class WhatsAppBotService {
                     description: `${asset.name} on ${asset.network}`,
                 })),
                 bodyText: text,
-                headerText: 'Your Assets',
+                headerText: 'Manage Your Assets',
                 actionButtonText: 'Manage Assets',
             });
 

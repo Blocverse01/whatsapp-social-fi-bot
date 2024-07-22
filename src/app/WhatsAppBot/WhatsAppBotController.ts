@@ -293,6 +293,18 @@ class WhatsAppBotController {
 
                         return;
 
+                    case 'explore-asset':
+                        const userAssetInfo = await UserService.getUserAssetInfo(
+                            from,
+                            interactiveListId
+                        );
+                        await WhatsAppBotService.walletDetailsMessage(
+                            businessPhoneNumberId,
+                            from,
+                            userAssetInfo
+                        );
+                        return;
+
                     case 'explore-asset-action':
                         const [_interactiveListId, assetAction, assetId] = interactiveListId.match(
                             ASSET_ACTION_REGEX_PATTERN
