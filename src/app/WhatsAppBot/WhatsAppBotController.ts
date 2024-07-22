@@ -6,7 +6,7 @@ import logger from '@/Resources/logger';
 import { OK } from '@/constants/status-codes';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import {
-    SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
+    extractSellAssetToBeneficiaryGroups,
     SELL_BENEFICIARY_AMOUNT_PATTERN,
 } from '@/constants/regex';
 import { isAxiosError } from 'axios';
@@ -256,19 +256,20 @@ class WhatsAppBotController {
 
                 const interactiveListId = list_reply.id;
 
-                logger.info('Interactive list id', { interactiveListId });
-
                 const interactiveActionResponse =
                     WhatsAppBotService.determineInteractiveListReplyAction(interactiveListId);
 
                 switch (interactiveActionResponse) {
                     case 'trigger-offramp-flow':
-                        const data = interactiveListId.match(
-                            SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN
-                        );
+                        const { sell, beneficiaryId } =
+                            extractSellAssetToBeneficiaryGroups(interactiveListId);
 
-                        console.log('data', data);
-                        //await WhatsAppBotService.beginOfframpFlowMessage({businessPhoneNumberId, recipient: from, assetId: });
+                        await WhatsAppBotService.beginOfframpFlowMessage({
+                            businessPhoneNumberId,
+                            recipient: from,
+                            assetId: sell,
+                            beneficiaryId,
+                        });
                         return;
 
                     case 'return-more-currencies':
