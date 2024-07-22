@@ -50,6 +50,7 @@ export interface WhatsAppInteractiveMessage extends WhatsAppMessageBase {
                 flow_id: string;
                 flow_cta: string;
                 flow_action: 'navigate' | 'data_exchange';
+                mode?: 'draft' | 'published';
                 flow_action_payload: {
                     screen: string;
                     data: Record<string, unknown>;

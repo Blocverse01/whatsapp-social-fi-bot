@@ -37,6 +37,7 @@ import {
     decryptRequest,
     encryptResponse,
 } from '@/Resources/utils/encryption';
+import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -279,36 +280,11 @@ class WhatsAppBotService {
 
         const asset = await UserService.getUserWalletAssetOrThrow(recipient, assetId);
 
-        const flowMessage: WhatsAppInteractiveMessage = {
-            type: 'interactive',
-            interactive: {
-                type: 'flow',
-                body: {
-                    text: `Sell ${asset.name} (${asset.network})`,
-                },
-                action: {
-                    name: 'flow',
-                    parameters: {
-                        flow_message_version: '3',
-                        flow_token: crypto.randomBytes(16).toString('hex'),
-                        flow_id: '980070373602833',
-                        flow_cta: 'Sell Asset',
-                        flow_action: 'navigate',
-                        flow_action_payload: {
-                            screen: 'AMOUNT_INPUT',
-                            data: {
-                                asset_label: `${asset.name} (${asset.network})`,
-                                asset_id: assetId,
-                                beneficiary_id: beneficiaryId,
-                            },
-                        },
-                    },
-                },
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: recipient,
-        };
+        const flowMessage = WhatsAppBotOffRampFlowService.generateOfframpFlowInitMessage({
+            asset,
+            beneficiaryId,
+            recipient,
+        });
 
         await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);
     }
