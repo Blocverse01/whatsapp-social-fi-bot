@@ -26,7 +26,10 @@ import {
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { TokenNames } from '@/Resources/web3/tokens';
-import { SELL_BENEFICIARY_AMOUNT_PATTERN } from '@/constants/regex';
+import {
+    SELL_BENEFICIARY_AMOUNT_PATTERN,
+    SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
+} from '@/constants/regex';
 import SumSubService from '@/app/SumSub/SumSubService';
 import crypto from 'node:crypto';
 import {
@@ -266,6 +269,50 @@ class WhatsAppBotService {
         }
     }
 
+    public static async beginOfframpFlowMessage(params: {
+        businessPhoneNumberId: string;
+        recipient: string;
+        beneficiaryId: string;
+        assetId: string;
+    }) {
+        const { assetId, beneficiaryId, recipient, businessPhoneNumberId } = params;
+
+        const asset = await UserService.getUserWalletAssetOrThrow(recipient, assetId);
+
+        const flowMessage: WhatsAppInteractiveMessage = {
+            type: 'interactive',
+            interactive: {
+                type: 'flow',
+                body: {
+                    text: `Sell ${asset.name} (${asset.network})`,
+                },
+                action: {
+                    name: 'offramp_flow',
+                    parameters: {
+                        flow_message_version: '3',
+                        flow_token: crypto.randomBytes(16).toString('hex'),
+                        flow_id: '980070373602833',
+                        flow_cta: 'Sell Asset',
+                        flow_action: 'INIT',
+                        flow_action_payload: {
+                            screen: 'AMOUNT_INPUT',
+                            data: {
+                                asset_label: `${asset.name} (${asset.network})`,
+                                asset_id: assetId,
+                                beneficiary_id: beneficiaryId,
+                            },
+                        },
+                    },
+                },
+            },
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: recipient,
+        };
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);
+    }
+
     public static async selectAmountMessage(
         businessPhoneNumberId: string,
         recipient: string,
@@ -448,8 +495,8 @@ class WhatsAppBotService {
             return 'return-more-currencies';
         }
 
-        if (interactiveListReplyId.includes('beneficiaryId')) {
-            return 'demo-withdraw-to-beneficiary';
+        if (interactiveListReplyId.match(SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN)) {
+            return 'trigger-offramp-flow';
         }
 
         throw new Error('Unrecognized action');
@@ -625,9 +672,13 @@ class WhatsAppBotService {
 
     public static encryptFlowResponse(
         response: unknown,
-        aesKeyBuffer: Buffer,
-        initialVectorBuffer: Buffer
+        buffers: {
+            aesKeyBuffer: Buffer;
+            initialVectorBuffer: Buffer;
+        }
     ) {
+        const { aesKeyBuffer, initialVectorBuffer } = buffers;
+
         return encryptResponse(response, aesKeyBuffer, initialVectorBuffer);
     }
 }

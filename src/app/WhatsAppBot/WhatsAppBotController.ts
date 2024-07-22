@@ -15,6 +15,9 @@ import {
     RATES_COMMAND,
     WhatsAppMessageType,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
+import { handleRequestError } from '@/Resources/requestHelpers/handleRequestError';
+import { requestDecryptedDataFlowExchange } from '@/Resources/requestHelpers/requestPropsGuard';
+import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
 
 type Message = {
     id: string;
@@ -250,16 +253,17 @@ class WhatsAppBotController {
 
                 const interactiveListId = list_reply.id;
 
+                logger.info('Interactive list id', { interactiveListId });
+
                 const interactiveActionResponse =
                     WhatsAppBotService.determineInteractiveListReplyAction(interactiveListId);
 
                 switch (interactiveActionResponse) {
-                    case 'demo-withdraw-to-beneficiary':
-                        await WhatsAppBotService.selectAmountMessage(
-                            businessPhoneNumberId,
-                            from,
-                            interactiveListId
-                        );
+                    case 'trigger-offramp-flow':
+                        const data = interactiveListId.match(SELL_BENEFICIARY_AMOUNT_PATTERN);
+
+                        console.log('data', data);
+                        //await WhatsAppBotService.beginOfframpFlowMessage({businessPhoneNumberId, recipient: from, assetId: });
                         return;
 
                     case 'return-more-currencies':
@@ -333,6 +337,24 @@ class WhatsAppBotController {
                         return;
                 }
             }
+        }
+    }
+
+    public static async offrampFlowDataExchange(req: Request, res: Response) {
+        try {
+            const { decryptedBody, initialVectorBuffer, aesKeyBuffer } =
+                requestDecryptedDataFlowExchange(req);
+
+            const response = await WhatsAppBotOffRampFlowService.receiveDataExchange(decryptedBody);
+
+            return res.send(
+                WhatsAppBotService.encryptFlowResponse(response, {
+                    initialVectorBuffer,
+                    aesKeyBuffer,
+                })
+            );
+        } catch (error) {
+            handleRequestError(error, res);
         }
     }
 }

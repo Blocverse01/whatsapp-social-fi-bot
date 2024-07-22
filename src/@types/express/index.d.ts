@@ -1,9 +1,11 @@
 import { Request } from 'express';
+import { DecryptedFlowDataExchange } from '@/app/WhatsAppBot/WhatsAppBotType';
 
 declare global {
     namespace Express {
         export interface Request {
             rawBody: string;
+            decryptedFlowDataExchange?: DecryptedFlowDataExchange;
         }
     }
     export type RequestWithBody<B> = Request<Request['params'], Request['res'], B>;

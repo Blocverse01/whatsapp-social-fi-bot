@@ -22,12 +22,15 @@ export interface WhatsAppInteractiveButton {
 export interface WhatsAppInteractiveMessage extends WhatsAppMessageBase {
     type: 'interactive';
     interactive: {
-        type: 'button' | 'list';
+        type: 'button' | 'list' | 'flow';
         body: {
             text: string;
         };
         header?: {
             type: string;
+            text: string;
+        };
+        footer?: {
             text: string;
         };
         action: {
@@ -40,6 +43,18 @@ export interface WhatsAppInteractiveMessage extends WhatsAppMessageBase {
                     description?: string;
                 }>;
             }>;
+            name?: string;
+            parameters?: {
+                flow_message_version: string;
+                flow_token: string;
+                flow_id: string;
+                flow_cta: string;
+                flow_action: 'navigate' | 'INIT';
+                flow_action_payload: {
+                    screen: string;
+                    data: Record<string, unknown>;
+                };
+            };
         };
     };
 }
@@ -75,7 +90,7 @@ export const assetInteractiveButtonsIds = Object.values(AssetInteractiveButtonId
 export const exploreAssetActions = Object.values(ExploreAssetActions);
 
 const actions = exploreAssetActions.join('|');
-const assetIds = assetInteractiveButtonsIds.join('|');
+export const assetIds = assetInteractiveButtonsIds.join('|');
 
 // Create the regex pattern
 export const ASSET_ACTION_REGEX_PATTERN = `^(${actions}):(${assetIds})$`;
@@ -120,7 +135,7 @@ export type InteractiveButtonReplyTypes =
     | 'demo-withdraw-amount-to-beneficiary';
 export type InteractiveListReplyTypes =
     | 'explore-asset-action'
-    | 'demo-withdraw-to-beneficiary'
+    | 'trigger-offramp-flow'
     | 'return-more-currencies';
 
 export type AssetActionRegexMatch = [string, ExploreAssetActions, AssetInteractiveButtonIds];
@@ -135,3 +150,21 @@ export type MoreCurrenciesCommandMatch = [
     string,
     string,
 ];
+
+export type DecryptedFlowDataExchange = {
+    decryptedBody: Record<string, unknown> & {
+        version: string;
+        action: 'ping' | 'INIT' | 'data_exchange';
+        data?: Record<string, unknown> & {
+            error?: unknown;
+        };
+    };
+    aesKeyBuffer: Buffer;
+    initialVectorBuffer: Buffer;
+};
+
+export type DataExchangeResponse = {
+    version: string;
+    data: Record<string, unknown>;
+    screen?: string;
+};
