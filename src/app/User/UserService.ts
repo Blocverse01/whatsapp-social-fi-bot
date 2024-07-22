@@ -233,7 +233,7 @@ class UserService {
         if (transactionDetails.status === 'submitted') {
             setTimeout(() => {
                 this.processOfframpTransactionInDemoMode(onChainTransactionId, params);
-            }, 10000);
+            }, 5000);
         }
 
         if (transactionDetails.status === 'success' && transactionDetails.transaction_hash) {

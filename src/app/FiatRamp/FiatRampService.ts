@@ -42,6 +42,7 @@ import {
 import { HUNDRED } from '@/constants/numbers';
 import { CountryCode } from 'libphonenumber-js';
 import { dbClient } from '@/Db/dbClient';
+import { defaultAmountFixer } from '@/Resources/utils/currency';
 
 class FiatRampService {
     private static API_URL = env.FIAT_RAMPS_PROVIDER_API_URL;
@@ -75,10 +76,10 @@ class FiatRampService {
         const fees = response.data.data;
 
         if (route === 'onramp') {
-            return fees.onrampFeePercentage / HUNDRED;
+            return defaultAmountFixer(fees.onrampFeePercentage / HUNDRED);
         }
 
-        return fees.offrampFeePercentage / HUNDRED;
+        return defaultAmountFixer(fees.offrampFeePercentage / HUNDRED);
     }
 
     public static async getAllRates() {

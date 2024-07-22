@@ -121,6 +121,17 @@ class WalletKitService {
         return response.data;
     }
 
+    public static async waitForTransactionHashAndStatus(transactionId: string) {
+        let transaction = await this.getTransactionById(transactionId);
+
+        while (transaction.status === 'submitted' && !transaction.transaction_hash) {
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            transaction = await this.getTransactionById(transactionId);
+        }
+
+        return transaction as TransactionResponse & { transaction_hash: string };
+    }
+
     public static async getBalance(
         walletAddress: string,
         network: SupportedChain,

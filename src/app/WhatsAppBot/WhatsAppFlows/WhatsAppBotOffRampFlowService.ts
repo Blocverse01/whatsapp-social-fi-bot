@@ -11,6 +11,9 @@ import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { BankBeneficiary, MobileMoneyBeneficiary } from '@/app/FiatRamp/fiatRampSchema';
 import { defaultAmountFixer, formatNumberAsCurrency } from '@/Resources/utils/currency';
 import UserService from '@/app/User/UserService';
+import { CountryCode } from 'libphonenumber-js';
+import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
+import WalletKitService from '@/app/WalletKit/WalletKitService';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -31,12 +34,14 @@ type DataExchangedFromAmountInputScreen = {
         account_number: string;
         provider_name: string;
         currency_symbol: string;
+        country_code: string;
     };
     asset_label: string;
 };
 type DataExchangedFromTransactionSummaryScreen = {
     asset_id: string;
     token_amount_to_debit: string;
+    token_amount: string;
     user_id: string;
     fiat_to_receive: string;
     beneficiary_id: string;
@@ -51,6 +56,11 @@ type FiatToReceivePattern =
     `${string}\n---------------------------------\n1 ${TokenNames} = ${string}`;
 
 const SECTION_SEPARATOR = '\n---------------------------------\n' as const;
+
+type ProcessOfframpTransactionResponse = {
+    status: 'processing' | 'complete' | 'failed' | 'pending';
+    message: string;
+};
 
 class WhatsAppBotOffRampFlowService {
     private static FLOW_MODE: FlowMode = 'draft';
@@ -78,7 +88,7 @@ class WhatsAppBotOffRampFlowService {
                     break;
 
                 case OffRampFlowScreens.TRANSACTION_SUMMARY:
-                    nextScreenData = await this.getProcessingFeedbackScreenData(
+                    nextScreenData = await this.getFeedbackScreenData(
                         data as DataExchangedFromTransactionSummaryScreen
                     );
                     break;
@@ -127,12 +137,16 @@ class WhatsAppBotOffRampFlowService {
     private static async getTransactionSummaryScreenData(
         input: DataExchangedFromAmountInputScreen
     ) {
-        const { amount, asset_id, beneficiary, asset_label } = input;
+        const { amount, asset_id, beneficiary, user_id } = input;
 
         const assetConfig = getAssetConfigOrThrow(asset_id);
+        const { rate: conversionRate, fee: transactionFee } = await FiatRampService.getQuotes(
+            beneficiary.currency_symbol,
+            beneficiary.country_code as CountryCode,
+            'offramp'
+        );
 
         const amountAsNumber = parseFloat(amount.trim());
-        const transactionFee = defaultAmountFixer(amountAsNumber * TRANSACTION_FEE_PERCENTAGE);
         const token_amount: TokenAmountPattern = this.generateTokenAmountPattern(
             amountAsNumber,
             assetConfig,
@@ -143,8 +157,6 @@ class WhatsAppBotOffRampFlowService {
         const token_amount_to_debit: TokenAmountToDebitPattern = `${amountToDebit} ${assetConfig.tokenName}`;
 
         const destination_account = this.generateDestinationString(beneficiary);
-
-        const conversionRate = await FiatRampService.getSellRate(beneficiary.currency_symbol);
 
         const fiatEquivalent = defaultAmountFixer(amountAsNumber * conversionRate);
 
@@ -158,6 +170,8 @@ class WhatsAppBotOffRampFlowService {
         return {
             screen: OffRampFlowScreens.TRANSACTION_SUMMARY,
             data: {
+                asset_id,
+                user_id,
                 display_data: {
                     token_amount,
                     token_amount_to_debit,
@@ -175,30 +189,96 @@ class WhatsAppBotOffRampFlowService {
         };
     }
 
-    private static async getProcessingFeedbackScreenData(
-        input: DataExchangedFromTransactionSummaryScreen
-    ) {
+    private static async getFeedbackScreenData(input: DataExchangedFromTransactionSummaryScreen) {
         const {
             asset_id,
+            token_amount,
             token_amount_to_debit,
             fiat_to_receive,
             beneficiary_id,
-            transaction_fee,
             user_id,
         } = input;
-
-        const assetConfig = getAssetConfigOrThrow(asset_id);
-
-        const walletInfo = await UserService.getUserAssetInfo(user_id, asset_id);
-
-        console.log({ walletInfo });
+        const response = await this.processOffRampTransaction({
+            assetId: asset_id,
+            fiatAmount: parseFloat(fiat_to_receive),
+            tokenAmount: parseFloat(token_amount),
+            tokenAmountToDebit: parseFloat(token_amount_to_debit),
+            beneficiaryId: beneficiary_id,
+            userId: user_id,
+        });
 
         return {
-            screen: OffRampFlowScreens.PROCESSING_FEEDBACK,
+            screen:
+                response.status === 'processing'
+                    ? OffRampFlowScreens.PROCESSING_FEEDBACK
+                    : OffRampFlowScreens.ERROR_FEEDBACK,
             data: {
-                status: 'Processing',
+                status: response.status[0].toUpperCase() + response.status.slice(1),
             },
         };
+    }
+
+    private static async processOffRampTransaction(params: {
+        fiatAmount: number;
+        userId: string;
+        assetId: string;
+        tokenAmount: number;
+        tokenAmountToDebit: number;
+        beneficiaryId: string;
+    }): Promise<ProcessOfframpTransactionResponse> {
+        const { fiatAmount, userId, assetId, tokenAmountToDebit, beneficiaryId, tokenAmount } =
+            params;
+
+        const assetConfig = getAssetConfigOrThrow(assetId);
+        const walletInfo = await UserService.getUserAssetInfo(userId, assetId);
+        const assetBalance = parseFloat(walletInfo.tokenBalance);
+
+        if (assetBalance < tokenAmountToDebit) {
+            return {
+                status: 'failed',
+                message: 'Insufficient balance',
+            };
+        }
+
+        try {
+            const { transactionId, hotWalletAddress } = await UserService.sendUserAssetForOfframp(
+                {
+                    walletAddress: walletInfo.walletAddress,
+                    network: assetConfig.network,
+                    tokenAddress: assetConfig.tokenAddress,
+                    name: assetConfig.tokenName,
+                    listItemId: assetId,
+                },
+                tokenAmountToDebit.toString()
+            );
+
+            const transaction =
+                await WalletKitService.waitForTransactionHashAndStatus(transactionId);
+
+            await FiatRampService.postOfframpTransaction({
+                beneficiaryId: beneficiaryId,
+                usdAmount: tokenAmount,
+                localAmount: fiatAmount,
+                tokenAddress: assetConfig.tokenAddress,
+                hotWalletAddress,
+                chainName: assetConfig.network,
+                tokenName: assetConfig.tokenName,
+                userWalletAddress: walletInfo.walletAddress,
+                txHash: transaction.transaction_hash,
+            });
+
+            return {
+                status: 'processing',
+                message: 'Transaction successful',
+            };
+        } catch (error) {
+            logServiceError(error, 'Processing offramp transaction failed');
+
+            return {
+                status: 'failed',
+                message: 'Transaction failed',
+            };
+        }
     }
 
     public static generateOffRampFlowInitMessage(params: {
@@ -250,6 +330,7 @@ class WhatsAppBotOffRampFlowService {
                                     provider_name: beneficiaryProvider,
                                     id: beneficiary.id,
                                     currency_symbol: beneficiary.country.currencySymbol,
+                                    country_code: beneficiary.country.code,
                                 } satisfies DataExchangedFromAmountInputScreen['beneficiary'],
                             },
                         },
