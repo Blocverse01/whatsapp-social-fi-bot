@@ -274,9 +274,7 @@ class WhatsAppBotOffRampFlowService {
                 userWalletAddress: walletInfo.walletAddress,
                 hotWalletAddress,
             })
-                .then((r) =>
-                    logger.info(`Offramp request sent for transactionId: ${transactionId}`)
-                )
+                .then(() => logger.info(`Offramp request sent for transactionId: ${transactionId}`))
                 .catch((e) =>
                     logServiceError(e, `Offramp request failed for transactionId: ${transactionId}`)
                 );

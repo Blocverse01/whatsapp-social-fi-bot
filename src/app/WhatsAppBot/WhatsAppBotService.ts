@@ -31,7 +31,6 @@ import {
     SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
 } from '@/constants/regex';
 import SumSubService from '@/app/SumSub/SumSubService';
-import crypto from 'node:crypto';
 import {
     convertBase64ToAsciiString,
     decryptRequest,
@@ -66,7 +65,9 @@ class WhatsAppBotService {
                 requestOptions
             );
 
-            logger.info('Message sent successfully');
+            logger.info('Message sent successfully', {
+                response,
+            });
         } catch (error) {
             logServiceError(error, 'Error sending message');
         }
@@ -368,9 +369,10 @@ class WhatsAppBotService {
     }
 
     // Function to mark message as processed
+    // TODO: Remove dead code
     public static async markMessageProcessed(messageId: string): Promise<void> {
         try {
-            const data = await UserService.markMessageProcessed(messageId);
+            await UserService.markMessageProcessed(messageId);
         } catch (error) {
             logServiceError(error, 'Error marking message as processed:');
         }
@@ -616,7 +618,7 @@ class WhatsAppBotService {
         phoneParams: PhoneNumberParams,
         assetId: AssetInteractiveButtonIds
     ) {
-        const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
+        const { userPhoneNumber } = phoneParams;
         const userKycStatus = await UserService.getUserKycStatus(userPhoneNumber);
 
         if (
