@@ -1,6 +1,7 @@
 import env from '@/constants/env';
 import axios from 'axios';
 import {
+    BENEFICIARIES,
     CREATE_BENEFICIARY,
     GET_ALL_RATES,
     GET_BANKS,
@@ -23,6 +24,7 @@ import {
     CreateBeneficiaryResponse,
     GetAllRatesResponse,
     GetBeneficiariesResponse,
+    GetBeneficiaryResponse,
     GetCurrenciesResponse,
     GetMobileProvidersResponse,
     GetPaymentMethodsResponse,
@@ -243,6 +245,16 @@ class FiatRampService {
         const requestUrl = `${this.API_URL}${GET_BENEFICIARIES}?${requestQueryParams.toString()}`;
 
         const response = await axios.get<GetBeneficiariesResponse>(requestUrl, {
+            headers: this.requiredRequestHeaders,
+        });
+
+        return response.data.data;
+    }
+
+    public static async getBeneficiary(beneficiaryId: string) {
+        const requestUrl = `${this.API_URL}${BENEFICIARIES}/${beneficiaryId}`;
+
+        const response = await axios.get<GetBeneficiaryResponse>(requestUrl, {
             headers: this.requiredRequestHeaders,
         });
 

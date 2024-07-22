@@ -121,6 +121,13 @@ export const getSupportedBanksResponseSchema = z.object({
 
 export type GetSupportedBanksResponse = z.infer<typeof getSupportedBanksResponseSchema>;
 
+const beneficiaryCountrySchema = z.object({
+    country: z.string(),
+    code: z.string(),
+    currencyName: z.string(),
+    currencySymbol: z.string(),
+});
+
 export const bankBeneficiarySchema = z.object({
     accountName: z.string(),
     accountNumber: z.string(),
@@ -129,6 +136,7 @@ export const bankBeneficiarySchema = z.object({
     channelId: z.string(),
     id: z.string(),
     countryId: z.string(),
+    country: beneficiaryCountrySchema,
 });
 
 export const mobileMoneyBeneficiarySchema = (countryCode: CountryCode) =>
@@ -144,6 +152,7 @@ export const mobileMoneyBeneficiarySchema = (countryCode: CountryCode) =>
             .string()
             .refine((data) => isValidPhoneNumber(data, countryCode), 'Invalid Mobile Number'),
         countryId: z.string(),
+        country: beneficiaryCountrySchema,
     });
 
 export type BankBeneficiary = z.infer<typeof bankBeneficiarySchema>;
@@ -159,8 +168,8 @@ export const createBeneficiaryParams = (
     z.object({
         beneficiary:
             beneficiaryType === 'phone'
-                ? mobileMoneyBeneficiarySchema(countryCode).omit({ id: true })
-                : bankBeneficiarySchema.omit({ id: true }),
+                ? mobileMoneyBeneficiarySchema(countryCode).omit({ id: true, country: true })
+                : bankBeneficiarySchema.omit({ id: true, country: true }),
     });
 
 export type CreateBeneficiaryParams = z.infer<ReturnType<typeof createBeneficiaryParams>>;
@@ -184,6 +193,19 @@ export const getBeneficiariesResponseSchema = (
     });
 
 export type GetBeneficiariesResponse = z.infer<ReturnType<typeof getBeneficiariesResponseSchema>>;
+
+export const getBeneficiaryResponseSchema = (
+    countryCode: CountryCode,
+    beneficiaryType: 'phone' | 'bank'
+) =>
+    z.object({
+        data:
+            beneficiaryType === 'phone'
+                ? mobileMoneyBeneficiarySchema(countryCode)
+                : bankBeneficiarySchema,
+    });
+
+export type GetBeneficiaryResponse = z.infer<ReturnType<typeof getBeneficiaryResponseSchema>>;
 
 export const sendOfframpRequestPayloadSchema = z.object({
     beneficiaryId: z.string(),

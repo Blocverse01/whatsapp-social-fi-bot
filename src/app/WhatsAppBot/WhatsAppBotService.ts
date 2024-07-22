@@ -25,7 +25,7 @@ import {
 } from '@/app/FiatRamp/fiatRampSchema';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { TokenNames } from '@/Resources/web3/tokens';
+import { getAssetConfigOrThrow, TokenNames } from '@/Resources/web3/tokens';
 import {
     SELL_BENEFICIARY_AMOUNT_PATTERN,
     SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
@@ -270,7 +270,7 @@ class WhatsAppBotService {
         }
     }
 
-    public static async beginOfframpFlowMessage(params: {
+    public static async beginOffRampFlowMessage(params: {
         businessPhoneNumberId: string;
         recipient: string;
         beneficiaryId: string;
@@ -278,11 +278,16 @@ class WhatsAppBotService {
     }) {
         const { assetId, beneficiaryId, recipient, businessPhoneNumberId } = params;
 
-        const asset = await UserService.getUserWalletAssetOrThrow(recipient, assetId);
+        const asset = getAssetConfigOrThrow(assetId);
+        const beneficiary = await FiatRampService.getBeneficiary(beneficiaryId);
 
-        const flowMessage = WhatsAppBotOffRampFlowService.generateOfframpFlowInitMessage({
+        if (!asset) {
+            throw new Error('Invalid asset');
+        }
+
+        const flowMessage = WhatsAppBotOffRampFlowService.generateOffRampFlowInitMessage({
             asset,
-            beneficiaryId,
+            beneficiary,
             recipient,
         });
 

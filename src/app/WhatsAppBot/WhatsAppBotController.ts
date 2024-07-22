@@ -264,7 +264,7 @@ class WhatsAppBotController {
                         const { sell, beneficiaryId } =
                             extractSellAssetToBeneficiaryGroups(interactiveListId);
 
-                        await WhatsAppBotService.beginOfframpFlowMessage({
+                        await WhatsAppBotService.beginOffRampFlowMessage({
                             businessPhoneNumberId,
                             recipient: from,
                             assetId: sell,

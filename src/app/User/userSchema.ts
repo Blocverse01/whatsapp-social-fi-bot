@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { supportedChainSchema } from '@/app/WalletKit/walletKitSchema';
+import { TokenNames } from '@/Resources/web3/tokens';
 
 export const userAssetSchema = z.object({
     listItemId: z.string(),
     walletAddress: z.string(),
-    name: z.string(),
+    name: z.nativeEnum(TokenNames),
     tokenAddress: z.string(),
     network: supportedChainSchema,
 });

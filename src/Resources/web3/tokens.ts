@@ -1,6 +1,7 @@
 import env from '@/constants/env';
 import { DUMMY_ETH_PRICE, DUMMY_MATIC_PRICE, DUMMY_USD_PRICE } from '@/constants/numbers';
 import { AssetInteractiveButtonIds } from '@/app/WhatsAppBot/WhatsAppBotType';
+import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
 
 export enum TokenAddresses {
     USDT_MATIC_MAINNET = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
@@ -15,6 +16,13 @@ export enum TokenNames {
     MATIC = 'MATIC',
     ETH = 'ETH',
 }
+
+export type AssetConfig = {
+    tokenAddress: string;
+    tokenName: TokenNames;
+    listItemId: string;
+    network: SupportedChain;
+};
 
 export const usdtPolygonConfig = {
     tokenAddress:
@@ -45,6 +53,21 @@ export const ethConfig = {
     listItemId: AssetInteractiveButtonIds.ETH_BASE,
     tokenAddress: 'ETH',
     network: 'Base' as const,
+};
+
+export const getAssetConfigOrThrow = (listItemId: string): AssetConfig => {
+    switch (listItemId) {
+        case AssetInteractiveButtonIds.USDT_POLYGON:
+            return usdtPolygonConfig;
+        case AssetInteractiveButtonIds.USDC_BASE:
+            return usdcBaseConfig;
+        case AssetInteractiveButtonIds.MATIC_POLYGON:
+            return maticConfig;
+        case AssetInteractiveButtonIds.ETH_BASE:
+            return ethConfig;
+        default:
+            throw new Error(`Invalid asset list item id: ${listItemId}`);
+    }
 };
 
 export const getDummyUsdValue = (tokenName: TokenNames) => {

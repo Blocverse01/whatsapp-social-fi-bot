@@ -15,6 +15,7 @@ export const GET_ONRAMP_TRANSACTION = FIAT_RAMPS + '/get-on-ramp-transaction';
 export const POST_OFFRAMP = FIAT_RAMPS + '/off-ramp';
 export const SEND_OFFRAMP_REQUEST = FIAT_RAMPS + '/offramp-request';
 export const GET_BENEFICIARIES = FIAT_RAMPS + '/get-beneficiaries';
+export const BENEFICIARIES = FIAT_RAMPS + '/beneficiaries';
 export const CREATE_BENEFICIARY = FIAT_RAMPS + '/create-beneficiary';
 export const GET_BANKS = FIAT_RAMPS + '/get-supported-banks';
 export const GET_OFFRAMP_TRANSACTION = FIAT_RAMPS + '/get-off-ramp-transaction';
