@@ -68,20 +68,30 @@ class WhatsAppBotOffRampFlowService {
         }
 
         if (action === 'data_exchange') {
+            let nextScreenData: Omit<DataExchangeResponse, 'version'> | undefined;
+
             switch (screen) {
                 case OffRampFlowScreens.AMOUNT_INPUT:
-                    const nextScreenData = await this.getTransactionSummaryScreenData(
+                    nextScreenData = await this.getTransactionSummaryScreenData(
                         data as DataExchangedFromAmountInputScreen
                     );
-
-                    return {
-                        ...nextScreenData,
-                        version: requestBody.version,
-                    };
+                    break;
 
                 case OffRampFlowScreens.TRANSACTION_SUMMARY:
-                // const nextScreenData = await this.getProcessingFeedbackScreenData(data as DataExchangedFromTransactionSummaryScreen);
+                    nextScreenData = await this.getProcessingFeedbackScreenData(
+                        data as DataExchangedFromTransactionSummaryScreen
+                    );
+                    break;
             }
+
+            if (!nextScreenData) {
+                throw new Error('Unhandled screen');
+            }
+
+            return {
+                ...nextScreenData,
+                version: requestBody.version,
+            };
         }
 
         throw new Error('Unhandled action');
@@ -182,6 +192,13 @@ class WhatsAppBotOffRampFlowService {
         const walletInfo = await UserService.getUserAssetInfo(user_id, asset_id);
 
         console.log({ walletInfo });
+
+        return {
+            screen: OffRampFlowScreens.PROCESSING_FEEDBACK,
+            data: {
+                status: 'Processing',
+            },
+        };
     }
 
     public static generateOffRampFlowInitMessage(params: {
