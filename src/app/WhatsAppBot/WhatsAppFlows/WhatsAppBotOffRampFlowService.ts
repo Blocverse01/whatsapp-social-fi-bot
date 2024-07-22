@@ -166,12 +166,14 @@ class WhatsAppBotOffRampFlowService {
         const beneficiaryProvider =
             'bankName' in beneficiary ? beneficiary.bankName : beneficiary.mobileProvider;
 
+        const sellMessage = `Sell ${assetLabel} for ${beneficiary.country.currencySymbol}`;
+
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
                 type: 'flow',
                 body: {
-                    text: `Sell ${assetLabel}`,
+                    text: sellMessage,
                 },
                 action: {
                     name: 'flow',
@@ -185,6 +187,7 @@ class WhatsAppBotOffRampFlowService {
                         flow_action_payload: {
                             screen: this.INITIAL_SCREEN,
                             data: {
+                                dynamic_page_title: sellMessage,
                                 asset_label: assetLabel,
                                 asset_id: asset.listItemId,
                                 beneficiary: {
