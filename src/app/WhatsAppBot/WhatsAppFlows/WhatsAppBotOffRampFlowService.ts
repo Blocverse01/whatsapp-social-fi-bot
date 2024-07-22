@@ -10,6 +10,7 @@ import { TRANSACTION_FEE_PERCENTAGE } from '@/constants/numbers';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { BankBeneficiary, MobileMoneyBeneficiary } from '@/app/FiatRamp/fiatRampSchema';
 import { defaultAmountFixer, formatNumberAsCurrency } from '@/Resources/utils/currency';
+import UserService from '@/app/User/UserService';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -23,6 +24,7 @@ enum OffRampFlowScreens {
 type DataExchangedFromAmountInputScreen = {
     amount: string;
     asset_id: string;
+    user_id: string;
     beneficiary: {
         id: string;
         account_name: string;
@@ -35,6 +37,7 @@ type DataExchangedFromAmountInputScreen = {
 type DataExchangedFromTransactionSummaryScreen = {
     asset_id: string;
     token_amount_to_debit: string;
+    user_id: string;
     fiat_to_receive: string;
     beneficiary_id: string;
     transaction_fee: string;
@@ -171,9 +174,14 @@ class WhatsAppBotOffRampFlowService {
             fiat_to_receive,
             beneficiary_id,
             transaction_fee,
+            user_id,
         } = input;
 
         const assetConfig = getAssetConfigOrThrow(asset_id);
+
+        const walletInfo = await UserService.getUserAssetInfo(user_id, asset_id);
+
+        console.log({ walletInfo });
     }
 
     public static generateOffRampFlowInitMessage(params: {
@@ -218,6 +226,7 @@ class WhatsAppBotOffRampFlowService {
                                 dynamic_page_title: sellMessage,
                                 asset_label: assetLabel,
                                 asset_id: asset.listItemId,
+                                user_id: recipient,
                                 beneficiary: {
                                     account_name: beneficiaryName,
                                     account_number: beneficiaryAccountNumber,
