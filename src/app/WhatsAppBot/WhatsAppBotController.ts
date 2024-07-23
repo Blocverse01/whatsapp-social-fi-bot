@@ -47,7 +47,7 @@ export type Message = {
         };
         nfm_reply?: {
             name: 'flow';
-            response_json: Record<string, unknown> & {
+            response_json: {
                 beneficiary_id?: string;
                 asset_id?: string;
                 flow_token?: string;
@@ -135,6 +135,14 @@ class WhatsAppBotController {
 
         if (!firstChangeValue) {
             logger.info('Un-extracted request body', requestBody);
+
+            return {};
+        }
+
+        if (!firstChangeValue.metadata || !firstChangeValue.metadata.phone_number_id) {
+            logger.info('No phone number id found in request body', {
+                firstChangeValue,
+            });
 
             return {};
         }
