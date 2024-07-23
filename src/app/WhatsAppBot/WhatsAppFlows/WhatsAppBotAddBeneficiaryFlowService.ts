@@ -1,7 +1,12 @@
 import { AssetConfig } from '@/Resources/web3/tokens';
-import { WhatsAppInteractiveMessage } from '@/app/WhatsAppBot/WhatsAppBotType';
+import {
+    DataExchangeResponse,
+    DecryptedFlowDataExchange,
+    WhatsAppInteractiveMessage,
+} from '@/app/WhatsAppBot/WhatsAppBotType';
 import crypto from 'node:crypto';
 import { FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
+import logger from '@/Resources/logger';
 
 enum AddBeneficiaryFlowScreens {
     ACCOUNT_TYPE = 'ACCOUNT_TYPE',
@@ -15,6 +20,18 @@ class WhatsAppBotAddBeneficiaryFlowService {
     private static FLOW_MODE: FlowMode = 'draft';
     private static FLOW_ID = '482861261039877';
     private static INITIAL_SCREEN = AddBeneficiaryFlowScreens.ACCOUNT_TYPE;
+
+    public static async receiveDataExchange(
+        requestBody: DecryptedFlowDataExchange['decryptedBody']
+    ): Promise<DataExchangeResponse> {
+        const { screen, data } = requestBody;
+
+        logger.info(`Received data exchange for screen: ${screen}`, {
+            data,
+        });
+
+        throw new Error('Unhandled action');
+    }
 
     public static generateAddBeneficiaryFlowInitMessage(params: {
         asset: AssetConfig;

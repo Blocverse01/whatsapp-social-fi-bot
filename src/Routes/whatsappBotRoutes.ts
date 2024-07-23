@@ -11,6 +11,11 @@ whatsappBotRoutes
         '/flows/offramp-data-exchange',
         decryptFlowDataExchange,
         WhatsAppBotController.offrampFlowDataExchange
+    )
+    .post(
+        '/flows/beneficiary-data-exchange',
+        decryptFlowDataExchange,
+        WhatsAppBotController.addBeneficiaryFlowDataExchange
     );
 
 export default whatsappBotRoutes;

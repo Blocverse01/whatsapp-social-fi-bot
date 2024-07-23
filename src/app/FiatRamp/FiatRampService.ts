@@ -153,9 +153,9 @@ class FiatRampService {
 
     public static formatPaymentMethodName(channelName: string, route: 'onramp' | 'offramp') {
         if (route === 'onramp') {
-            return channelName === 'bank' ? 'bank transfer' : 'mobile money';
+            return channelName === 'bank' ? 'Bank Transfer' : 'Mobile Money';
         }
-        return channelName === 'bank' ? 'bank account' : 'mobile money account';
+        return channelName === 'bank' ? 'Bank Account' : 'Mobile Money Account';
     }
 
     public static async getSupportedMobileProviders(channelId: string) {

@@ -313,7 +313,7 @@ class WhatsAppBotService {
 
         const accountTypes = paymentChannels.map((channel) => ({
             id: channel.channelId,
-            title: channel.channelName,
+            title: FiatRampService.formatPaymentMethodName(channel.channelName, 'offramp'),
         }));
 
         const flowMessage =
