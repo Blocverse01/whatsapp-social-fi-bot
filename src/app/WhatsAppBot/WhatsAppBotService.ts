@@ -195,7 +195,7 @@ class WhatsAppBotService {
                                     description = `Bank Name: ${bankBeneficiaryCast.bankName}\nAccount Number: ${bankBeneficiaryCast.accountNumber}`;
                                 }
                                 return {
-                                    id: `${assetId}|beneficiaryId:${beneficiary.id}`,
+                                    id: `sell:${assetId}|beneficiaryId:${beneficiary.id}`,
                                     title: title,
                                     description: description,
                                 };
