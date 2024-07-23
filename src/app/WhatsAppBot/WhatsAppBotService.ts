@@ -568,6 +568,8 @@ class WhatsAppBotService {
             response_json: { beneficiary_id, asset_id },
         } = nfmReply;
 
+        logger.info('NFM Reply props', { name, beneficiary_id, asset_id });
+
         if (name === 'flow' && asset_id && beneficiary_id) {
             return {
                 action: 'trigger-offramp-flow',
