@@ -30,6 +30,7 @@ import {
     SELL_BENEFICIARY_AMOUNT_PATTERN,
     SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
     SELL_ASSET_DESTINATION_CHOICE_REGEX,
+    TRADE_ASSET_REGEX,
 } from '@/constants/regex';
 import SumSubService from '@/app/SumSub/SumSubService';
 import {
@@ -132,7 +133,8 @@ class WhatsAppBotService {
 
     public static async offrampDestinationChoiceMessage(
         phoneParams: PhoneNumberParams,
-        assetId: string
+        assetId: string,
+        countryIdentifier: string
     ) {
         const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
 
@@ -141,11 +143,11 @@ class WhatsAppBotService {
             bodyText: 'Do you want to choose an existing beneficiary or add a new one?',
             replyButtons: [
                 {
-                    id: `sell:${assetId}|beneficiaryAction:chooseExisting`,
+                    id: `sell:${assetId}|beneficiaryAction:chooseExisting|countryCode:${countryIdentifier}`,
                     title: 'Choose Existing',
                 },
                 {
-                    id: `sell:${assetId}|beneficiaryAction:addNew`,
+                    id: `sell:${assetId}|beneficiaryAction:addNew|countryCode:${countryIdentifier}`,
                     title: 'Add New',
                 },
             ],
@@ -508,6 +510,10 @@ class WhatsAppBotService {
             return 'explore-asset';
         }
 
+        if (interactiveListReplyId.match(TRADE_ASSET_REGEX)) {
+            return 'trade-asset-with-currency';
+        }
+
         if (interactiveListReplyId.match(ASSET_ACTION_REGEX_PATTERN)) {
             return 'explore-asset-action';
         }
@@ -651,6 +657,33 @@ class WhatsAppBotService {
         await this.sendSelectSupportedCurrenciesMessage(
             phoneParams,
             ExploreAssetActions.BUY_ASSET,
+            assetId
+        );
+    }
+
+    public static async handleSellAssetAction(
+        phoneParams: PhoneNumberParams,
+        assetId: AssetInteractiveButtonIds
+    ) {
+        const userKycStatus = await UserService.getUserKycStatus(phoneParams.userPhoneNumber);
+
+        if (
+            userKycStatus === 'unverified' ||
+            userKycStatus === 'rejected' ||
+            userKycStatus === 'pending'
+        ) {
+            await this.sendKycVerificationUrlMessage(phoneParams);
+            return;
+        }
+
+        if (userKycStatus === 'in_review') {
+            await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
+            return;
+        }
+
+        await this.sendSelectSupportedCurrenciesMessage(
+            phoneParams,
+            ExploreAssetActions.SELL_ASSET,
             assetId
         );
     }

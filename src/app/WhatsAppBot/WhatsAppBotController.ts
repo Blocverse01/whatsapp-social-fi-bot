@@ -8,12 +8,14 @@ import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import {
     extractSellAssetDestinationChoiceGroups,
     extractSellAssetToBeneficiaryGroups,
+    extractTradeAssetGroups,
     SELL_BENEFICIARY_AMOUNT_PATTERN,
 } from '@/constants/regex';
 import { isAxiosError } from 'axios';
 import {
     ASSET_ACTION_REGEX_PATTERN,
     AssetActionRegexMatch,
+    ExploreAssetActions,
     MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
     MoreCurrenciesCommandMatch,
     RATES_COMMAND,
@@ -22,6 +24,7 @@ import {
 import { handleRequestError } from '@/Resources/requestHelpers/handleRequestError';
 import { requestDecryptedDataFlowExchange } from '@/Resources/requestHelpers/requestPropsGuard';
 import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
+import { CountryCode } from 'libphonenumber-js';
 
 type Message = {
     id: string;
@@ -255,14 +258,16 @@ class WhatsAppBotController {
                         return;
 
                     case 'sell-asset-destination-choice':
-                        const { sell: assetId, beneficiaryAction } =
-                            extractSellAssetDestinationChoiceGroups(interactiveButtonId);
+                        const {
+                            sell: assetId,
+                            beneficiaryAction,
+                            countryCode,
+                        } = extractSellAssetDestinationChoiceGroups(interactiveButtonId);
 
                         if (beneficiaryAction === 'chooseExisting') {
                             const usersBeneficiaries = await FiatRampService.getBeneficiaries(
                                 from,
-                                'NG',
-                                'bank'
+                                countryCode as CountryCode
                             );
 
                             await WhatsAppBotService.listBeneficiaryMessage(
@@ -342,6 +347,25 @@ class WhatsAppBotController {
                         );
                         return;
 
+                    case 'trade-asset-with-currency':
+                        const {
+                            assetActionId: tradeAction,
+                            purchaseAssetId: assetInteractiveId,
+                            currency,
+                        } = extractTradeAssetGroups(interactiveListId);
+
+                        if (tradeAction === ExploreAssetActions.SELL_ASSET) {
+                            await WhatsAppBotService.offrampDestinationChoiceMessage(
+                                {
+                                    userPhoneNumber: from,
+                                    businessPhoneNumberId,
+                                },
+                                assetInteractiveId,
+                                currency
+                            );
+                        }
+                        return;
+
                     case 'explore-asset-action':
                         const [_interactiveListId, assetAction, assetId] = interactiveListId.match(
                             ASSET_ACTION_REGEX_PATTERN
@@ -352,7 +376,7 @@ class WhatsAppBotController {
                         });
 
                         if (assetAction === 'sell') {
-                            await WhatsAppBotService.offrampDestinationChoiceMessage(
+                            await WhatsAppBotService.handleSellAssetAction(
                                 {
                                     userPhoneNumber: from,
                                     businessPhoneNumberId,

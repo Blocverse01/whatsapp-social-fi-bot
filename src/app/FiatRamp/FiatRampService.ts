@@ -235,13 +235,16 @@ class FiatRampService {
     public static async getBeneficiaries(
         ownerId: string,
         countryCode: CountryCode,
-        accountType: 'bank' | 'phone'
+        accountType: 'bank' | 'phone' | undefined = undefined
     ) {
         const requestQueryParams = new URLSearchParams({
             ownerId,
-            accountType,
             country: countryCode,
         });
+
+        if (accountType) {
+            requestQueryParams.append('accountType', accountType);
+        }
 
         const requestUrl = `${this.API_URL}${GET_BENEFICIARIES}?${requestQueryParams.toString()}`;
 
