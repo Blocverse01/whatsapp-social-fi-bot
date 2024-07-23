@@ -27,7 +27,7 @@ import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/Whats
 import { CountryCode } from 'libphonenumber-js';
 import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
 
-type Message = {
+export type Message = {
     id: string;
     type: string;
     from: string;
@@ -35,7 +35,7 @@ type Message = {
         body: string;
     };
     interactive: {
-        type: 'button_reply' | 'list_reply';
+        type: 'button_reply' | 'list_reply' | 'nfm_reply';
         list_reply?: {
             id: string;
             title: string;
@@ -44,6 +44,18 @@ type Message = {
         button_reply?: {
             id: string;
             title: string;
+        };
+        nfm_reply?: {
+            name: 'flow';
+            response_json: Record<string, unknown> & {
+                beneficiary_id?: string;
+                asset_id?: string;
+                flow_token?: string;
+                wa_flow_response_params?: {
+                    flow_id: string;
+                    flow_name: string;
+                };
+            };
         };
     };
 };
@@ -205,6 +217,7 @@ class WhatsAppBotController {
         if (type === WhatsAppMessageType.INTERACTIVE && interactive) {
             logger.info(`message-interactive : ${JSON.stringify(interactive)}`);
 
+            // =========== HANDLE INTERACTIVE BUTTON REPLIES =========== //
             if (interactive.type === 'button_reply' && interactive.button_reply) {
                 const { button_reply } = interactive;
 
@@ -299,6 +312,7 @@ class WhatsAppBotController {
                 }
             }
 
+            // =========== HANDLE INTERACTIVE LIST REPLIES =========== //
             if (interactive.type === 'list_reply' && interactive.list_reply) {
                 const phoneParams = { userPhoneNumber: from, businessPhoneNumberId };
 
@@ -423,6 +437,25 @@ class WhatsAppBotController {
 
                         return;
                 }
+            }
+
+            // =========== HANDLE NFM REPLIES =========== //
+            if (interactive.type === 'nfm_reply' && interactive.nfm_reply) {
+                const { nfm_reply } = interactive;
+
+                const responseAction =
+                    WhatsAppBotService.determineInteractiveNfmReplyAction(nfm_reply);
+
+                if (responseAction.action === 'trigger-offramp-flow') {
+                    await WhatsAppBotService.beginOffRampFlowMessage({
+                        businessPhoneNumberId,
+                        recipient: from,
+                        assetId: responseAction.data.assetId,
+                        beneficiaryId: responseAction.data.beneficiaryId,
+                    });
+                }
+
+                return;
             }
         }
     }

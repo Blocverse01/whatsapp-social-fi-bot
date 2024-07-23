@@ -141,6 +141,7 @@ export type InteractiveListReplyTypes =
     | 'explore-asset'
     | 'trigger-offramp-flow'
     | 'return-more-currencies';
+export type InteractiveNfmReplyActions = 'trigger-offramp-flow';
 
 export type AssetActionRegexMatch = [string, ExploreAssetActions, AssetInteractiveButtonIds];
 

@@ -6,6 +6,7 @@ import {
     ExploreAssetActions,
     InteractiveButtonReplyTypes,
     InteractiveListReplyTypes,
+    InteractiveNfmReplyActions,
     manageAssetActions,
     MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
     //WhatsAppInteractiveButton,
@@ -42,6 +43,7 @@ import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/Whats
 import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
 import { CountryCode } from 'libphonenumber-js';
 import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
+import { Message } from '@/app/WhatsAppBot/WhatsAppBotController';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -103,7 +105,7 @@ class WhatsAppBotService {
                 actionButtonText: 'Manage Assets',
             });
 
-        // TODO: Complete migration to new implementation and remove dead code.
+        // TODO: Review new implementation with stakeholders and remove dead code.
 
         // const walletAssetsButton: WhatsAppInteractiveButton[] = walletAssets
         //     .map((asset) => ({
@@ -558,6 +560,34 @@ class WhatsAppBotService {
         throw new Error('Unrecognized action');
     }
 
+    public static determineInteractiveNfmReplyAction(
+        nfmReply: Required<Message['interactive']>['nfm_reply']
+    ) {
+        const {
+            name,
+            response_json: { beneficiary_id, asset_id },
+        } = nfmReply;
+
+        if (name === 'flow' && asset_id && beneficiary_id) {
+            return {
+                action: 'trigger-offramp-flow',
+                data: {
+                    assetId: asset_id,
+                    beneficiaryId: beneficiary_id,
+                },
+            } satisfies {
+                action: InteractiveNfmReplyActions;
+                data: {
+                    assetId: string;
+                    beneficiaryId: string;
+                };
+            };
+        }
+
+        logger.info('Unrecognized action', { nfmReply });
+        throw new Error('Unrecognized action');
+    }
+
     private static async sendKycVerificationUrlMessage(phoneParams: PhoneNumberParams) {
         const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
         const kycUrl = await SumSubService.generateKycUrl(userPhoneNumber);
@@ -718,31 +748,19 @@ class WhatsAppBotService {
     }
 
     public static async sendKycVerifiedMessage(userPhoneNumber: string) {
-        const messagePayload: WhatsAppTextMessage = {
-            type: WhatsAppMessageType.TEXT,
-            text: {
-                body: `Your KYC has been successfully verified🎉\nYou now have access to all functionalities`,
-                preview_url: false,
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: userPhoneNumber,
-        };
+        const messagePayload: WhatsAppTextMessage = MessageGenerators.generateTextMessage(
+            userPhoneNumber,
+            `Your KYC has been successfully verified🎉\nYou now have access to all functionalities`
+        );
 
         await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
     }
 
     public static async sendKycRejectedMessage(userPhoneNumber: string) {
-        const messagePayload: WhatsAppTextMessage = {
-            type: WhatsAppMessageType.TEXT,
-            text: {
-                body: `Your KYC has been rejected. Please re-verify your identity.`,
-                preview_url: false,
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: userPhoneNumber,
-        };
+        const messagePayload: WhatsAppTextMessage = MessageGenerators.generateTextMessage(
+            userPhoneNumber,
+            `Your KYC has been rejected. Please re-verify your identity.`
+        );
 
         await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
     }
