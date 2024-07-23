@@ -102,7 +102,7 @@ class WhatsAppBotOffRampFlowService {
                 throw new Error('Unhandled screen');
             }
 
-            console.log(nextScreenData);
+            logger.info('Next screen data', nextScreenData);
 
             return {
                 ...nextScreenData,

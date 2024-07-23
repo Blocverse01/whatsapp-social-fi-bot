@@ -285,6 +285,11 @@ class WhatsAppBotController {
                 const interactiveActionResponse =
                     WhatsAppBotService.determineInteractiveListReplyAction(interactiveListId);
 
+                logger.info('Interactive list reply action', {
+                    interactiveActionResponse,
+                    interactiveListId,
+                });
+
                 switch (interactiveActionResponse) {
                     case 'trigger-offramp-flow':
                         const { sell, beneficiaryId } =
