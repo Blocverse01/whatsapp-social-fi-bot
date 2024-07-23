@@ -286,7 +286,12 @@ class WhatsAppBotController {
                         }
 
                         if (beneficiaryAction === 'addNew') {
-                            // TODO: handle adding new beneficiary
+                            await WhatsAppBotService.beginAddBeneficiaryFlowMessage({
+                                businessPhoneNumberId,
+                                userPhoneNumber: from,
+                                assetId,
+                                countryCode: countryCode as CountryCode,
+                            });
                         }
 
                         return;

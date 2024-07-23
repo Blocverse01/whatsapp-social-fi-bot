@@ -40,6 +40,8 @@ import {
 } from '@/Resources/utils/encryption';
 import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
 import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
+import { CountryCode } from 'libphonenumber-js';
+import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -296,6 +298,33 @@ class WhatsAppBotService {
         } catch (error) {
             await logServiceError(error, 'Error marking message as read:');
         }
+    }
+
+    public static async beginAddBeneficiaryFlowMessage(
+        params: PhoneNumberParams & {
+            assetId: string;
+            countryCode: CountryCode;
+        }
+    ) {
+        const { assetId, countryCode, userPhoneNumber, businessPhoneNumberId } = params;
+
+        const asset = getAssetConfigOrThrow(assetId);
+        const { paymentChannels } = await FiatRampService.getPaymentMethods(countryCode, 'offramp');
+
+        const accountTypes = paymentChannels.map((channel) => ({
+            id: channel.channelId,
+            title: channel.channelName,
+        }));
+
+        const flowMessage =
+            WhatsAppBotAddBeneficiaryFlowService.generateAddBeneficiaryFlowInitMessage({
+                asset,
+                countryCode,
+                recipient: userPhoneNumber,
+                accountTypes,
+            });
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);
     }
 
     public static async beginOffRampFlowMessage(params: {
