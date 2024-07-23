@@ -125,6 +125,14 @@ class WhatsAppBotController {
 
         const businessPhoneNumberId = firstChangeValue.metadata.phone_number_id;
 
+        if (!firstChangeValue.messages) {
+            logger.info('No messages found in request body', {
+                firstChangeValue,
+            });
+
+            return {};
+        }
+
         const message = firstChangeValue.messages[0];
 
         const displayName = firstChangeValue.contacts[0].profile.name;

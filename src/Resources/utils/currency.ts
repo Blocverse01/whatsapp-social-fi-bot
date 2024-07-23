@@ -9,6 +9,14 @@ export const formatNumberAsCurrency = (number: number, currency: string): string
     return formatter.format(defaultAmountFixer(number));
 };
 
+export const prettifyNumber = (number: number, maximumFractionDigits = TWO): string => {
+    const formatter = new Intl.NumberFormat('en-US', {
+        maximumFractionDigits,
+    });
+
+    return formatter.format(number);
+};
+
 export const fixNumber = (number: number, decimalPlaces: number): number => {
     return Number(number.toFixed(decimalPlaces));
 };

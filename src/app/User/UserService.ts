@@ -15,7 +15,7 @@ import {
 } from '@/Resources/web3/tokens';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { UserRecord } from '@/Db/xata';
-import { fixNumber, formatNumberAsCurrency } from '@/Resources/utils/currency';
+import { fixNumber, formatNumberAsCurrency, prettifyNumber } from '@/Resources/utils/currency';
 import { THREE } from '@/constants/numbers';
 
 class UserService {
@@ -194,7 +194,7 @@ class UserService {
         const usdBalance = getDummyUsdValue(asset.name as TokenNames) * tokenBalanceAsNumber;
 
         const usdBalanceDisplay = formatNumberAsCurrency(fixNumber(usdBalance, THREE), 'USD');
-        const tokenBalanceDisplay = formatNumberAsCurrency(tokenBalanceAsNumber, asset.name);
+        const tokenBalanceDisplay = prettifyNumber(tokenBalanceAsNumber, THREE);
 
         return {
             usdDisplayBalance: usdBalanceDisplay,

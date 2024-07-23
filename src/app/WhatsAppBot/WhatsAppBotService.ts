@@ -227,38 +227,20 @@ class WhatsAppBotService {
             assetName,
             assetNetwork,
         } = userAssetInfo;
-        const interactiveMessage: WhatsAppInteractiveMessage = {
-            type: WhatsAppMessageType.INTERACTIVE,
-            interactive: {
-                type: 'list',
-                body: {
-                    text: `Asset Balance 💰: ${tokenBalance}\n\nAsset Balance(USD) 💰: ${usdDisplayBalance}\n\nWallet Address: ${walletAddress}`,
-                },
-                header: {
-                    type: 'text',
-                    text: `${assetName} (${assetNetwork.toUpperCase()})`,
-                },
-                action: {
-                    button: 'Manage Asset',
-                    sections: [
-                        {
-                            rows: manageAssetActions.map((assetAction) => {
-                                return {
-                                    id: `${assetAction.action}:${listItemId}`,
-                                    title: assetAction.text,
-                                    description: assetAction.description,
-                                };
-                            }),
-                        },
-                    ],
-                },
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: recipient,
-        };
 
-        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
+        const interactiveListMessage = MessageGenerators.generateInteractiveListMessage({
+            recipient,
+            listItems: manageAssetActions.map((assetAction) => ({
+                id: `${assetAction.action}:${listItemId}`,
+                title: assetAction.text,
+                description: assetAction.description,
+            })),
+            bodyText: `Asset Balance 💰: ${tokenBalance}\n\nAsset Balance(USD) 💰: ${usdDisplayBalance}\n\nWallet Address: ${walletAddress}`,
+            headerText: `${assetName} (${assetNetwork.toUpperCase()})`,
+            actionButtonText: 'Manage Asset',
+        });
+
+        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveListMessage);
     }
 
     public static async createWalletMessage(
