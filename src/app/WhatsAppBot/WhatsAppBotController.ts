@@ -212,6 +212,11 @@ class WhatsAppBotController {
                 const interactiveActionResponse =
                     WhatsAppBotService.determineInteractiveButtonReplyAction(interactiveButtonId);
 
+                logger.info('Interactive list reply action', {
+                    interactiveActionResponse,
+                    interactiveButtonId,
+                });
+
                 switch (interactiveActionResponse) {
                     case 'create-wallet':
                         const createdNewUser = await UserService.createUser(from, displayName);
