@@ -66,11 +66,12 @@ class WhatsAppBotService {
                 requestOptions
             );
 
-            logger.info('Message sent successfully', {
+            await logger.info('Message sent successfully', {
                 responseData: response.data,
             });
         } catch (error) {
-            logServiceError(error, 'Error sending message');
+            await logServiceError(error, 'Error sending message');
+            throw error;
         }
     }
 
@@ -308,7 +309,7 @@ class WhatsAppBotService {
             );
             console.log('Message marked as read successfully:', response.data); // Handle successful response (optional)
         } catch (error) {
-            logServiceError(error, 'Error marking message as read:');
+            await logServiceError(error, 'Error marking message as read:');
         }
     }
 
@@ -389,7 +390,7 @@ class WhatsAppBotService {
             const data = await UserService.getUserByMessageId(messageId);
             return !!data;
         } catch (error) {
-            logServiceError(error, 'Error checking processed messages:');
+            await logServiceError(error, 'Error checking processed messages:');
         }
     }
 
@@ -399,7 +400,7 @@ class WhatsAppBotService {
         try {
             await UserService.markMessageProcessed(messageId);
         } catch (error) {
-            logServiceError(error, 'Error marking message as processed:');
+            await logServiceError(error, 'Error marking message as processed:');
         }
     }
 
@@ -412,7 +413,7 @@ class WhatsAppBotService {
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,
             text: {
-                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USDC\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
+                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USD\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
                 preview_url: false,
             },
             messaging_product: 'whatsapp',

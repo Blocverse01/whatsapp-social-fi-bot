@@ -8,10 +8,10 @@ const isDefaultError = (error: unknown): error is Error => {
     return error instanceof Error;
 };
 
-const logServiceError = (error: unknown, message: string) => {
+const logServiceError = async (error: unknown, message: string) => {
     const parsedError = parseUnknownError(error);
 
-    logger.error(message, {
+    await logger.error(message, {
         ...parsedError,
     });
 };
