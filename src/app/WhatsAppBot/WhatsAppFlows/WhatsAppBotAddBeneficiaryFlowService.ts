@@ -88,7 +88,7 @@ type DataExchangePayload = {
 
 class WhatsAppBotAddBeneficiaryFlowService {
     private static FLOW_MODE: FlowMode = 'draft';
-    private static FLOW_ID = '482861261039877';
+    public static readonly FLOW_ID = '482861261039877';
     private static INITIAL_SCREEN = AddBeneficiaryFlowScreens.ACCOUNT_TYPE;
 
     public static async receiveDataExchange(

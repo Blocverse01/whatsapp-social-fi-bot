@@ -566,6 +566,9 @@ class WhatsAppBotService {
         const { name } = nfmReply;
 
         const responseJson = nfmReply.response_json;
+        const flowResponseParams = nfmReply.response_json.wa_flow_response_params;
+
+        const flowId = flowResponseParams?.flow_id;
 
         logger.info('NFM Reply props', {
             name,
@@ -573,22 +576,25 @@ class WhatsAppBotService {
             raw: nfmReply,
         });
 
-        const { asset_id, beneficiary_id } = responseJson ?? {};
-
-        if (name === 'flow' && asset_id && beneficiary_id) {
-            return {
-                action: 'trigger-offramp-flow',
-                data: {
-                    assetId: asset_id,
-                    beneficiaryId: beneficiary_id,
-                },
-            } satisfies {
-                action: InteractiveNfmReplyActions;
-                data: {
-                    assetId: string;
-                    beneficiaryId: string;
+        if (name === 'flow') {
+            if (
+                flowId === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID &&
+                responseJson.beneficiary_id &&
+                responseJson.asset_id
+            )
+                return {
+                    action: 'trigger-offramp-flow',
+                    data: {
+                        assetId: responseJson.asset_id,
+                        beneficiaryId: responseJson.beneficiary_id,
+                    },
+                } satisfies {
+                    action: InteractiveNfmReplyActions;
+                    data: {
+                        assetId: string;
+                        beneficiaryId: string;
+                    };
                 };
-            };
         }
 
         logger.info('Unrecognized action', { nfmReply });
