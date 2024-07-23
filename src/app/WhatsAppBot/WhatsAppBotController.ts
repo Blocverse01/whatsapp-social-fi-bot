@@ -212,7 +212,7 @@ class WhatsAppBotController {
                 const interactiveActionResponse =
                     WhatsAppBotService.determineInteractiveButtonReplyAction(interactiveButtonId);
 
-                logger.info('Interactive list reply action', {
+                logger.info('Interactive button reply action', {
                     interactiveActionResponse,
                     interactiveButtonId,
                 });
@@ -268,6 +268,11 @@ class WhatsAppBotController {
                             beneficiaryAction,
                             countryCode,
                         } = extractSellAssetDestinationChoiceGroups(interactiveButtonId);
+
+                        logger.info(
+                            'Sell asset destination choice groups',
+                            extractSellAssetDestinationChoiceGroups(interactiveButtonId)
+                        );
 
                         if (beneficiaryAction === 'chooseExisting') {
                             const usersBeneficiaries = await FiatRampService.getBeneficiaries(
