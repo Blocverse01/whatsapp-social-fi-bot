@@ -563,12 +563,17 @@ class WhatsAppBotService {
     public static determineInteractiveNfmReplyAction(
         nfmReply: Required<Message['interactive']>['nfm_reply']
     ) {
-        const {
-            name,
-            response_json: { beneficiary_id, asset_id },
-        } = nfmReply;
+        const { name } = nfmReply;
 
-        logger.info('NFM Reply props', { name, beneficiary_id, asset_id });
+        const responseJson = nfmReply.response_json;
+
+        logger.info('NFM Reply props', {
+            name,
+            responseJson: responseJson ?? undefined,
+            raw: nfmReply,
+        });
+
+        const { asset_id, beneficiary_id } = responseJson ?? {};
 
         if (name === 'flow' && asset_id && beneficiary_id) {
             return {
