@@ -67,7 +67,7 @@ class WhatsAppBotService {
             );
 
             logger.info('Message sent successfully', {
-                response,
+                responseData: response.data,
             });
         } catch (error) {
             logServiceError(error, 'Error sending message');
