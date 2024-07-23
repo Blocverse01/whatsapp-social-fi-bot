@@ -577,6 +577,7 @@ class WhatsAppBotService {
         });
 
         if (name === 'flow') {
+            logger.info('Check for name === flow passed');
             if (
                 flowId === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID &&
                 responseJson.beneficiary_id &&
