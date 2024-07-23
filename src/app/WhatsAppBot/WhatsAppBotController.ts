@@ -98,8 +98,6 @@ class WhatsAppBotController {
                 logger.info('Message object not found');
             }
         } catch (error) {
-            console.log(error);
-
             if (isAxiosError(error)) {
                 logger.error('Error in receiving message webhook', {
                     errorResponse: error.response,
@@ -108,9 +106,7 @@ class WhatsAppBotController {
                 return;
             }
 
-            logger.error('Error in receiving message webhook', {
-                error: JSON.stringify(error),
-            });
+            handleRequestError(error, res, true);
         }
     }
 
