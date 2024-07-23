@@ -263,11 +263,8 @@ class WhatsAppBotController {
                         return;
 
                     case 'sell-asset-destination-choice':
-                        const {
-                            sell: assetId,
-                            beneficiaryAction,
-                            countryCode,
-                        } = extractSellAssetDestinationChoiceGroups(interactiveButtonId);
+                        const { assetId, beneficiaryAction, countryCode } =
+                            extractSellAssetDestinationChoiceGroups(interactiveButtonId);
 
                         logger.info(
                             'Sell asset destination choice groups',
