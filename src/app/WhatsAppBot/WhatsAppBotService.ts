@@ -141,11 +141,11 @@ class WhatsAppBotService {
             bodyText: 'Do you want to choose an existing beneficiary or add a new one?',
             replyButtons: [
                 {
-                    id: `sellAssetToBeneficiary:${assetId}|beneficiaryAction:chooseExisting`,
+                    id: `sell:${assetId}|beneficiaryAction:chooseExisting`,
                     title: 'Choose Existing',
                 },
                 {
-                    id: `sellAssetToBeneficiary:${assetId}|beneficiaryAction:addNew`,
+                    id: `sell:${assetId}|beneficiaryAction:addNew`,
                     title: 'Add New',
                 },
             ],
@@ -289,7 +289,8 @@ class WhatsAppBotService {
                 data,
                 requestOptions
             );
-            console.log('Message marked as read successfully:', response.data); // Handle successful response (optional)
+
+            logger.info('Message marked as read successfully:', response.data); // Handle successful response (optional)
         } catch (error) {
             await logServiceError(error, 'Error marking message as read:');
         }
