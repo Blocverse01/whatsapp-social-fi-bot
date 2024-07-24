@@ -175,7 +175,7 @@ export type DataExchangeResponse = {
 };
 
 export type FlowNfmReplyResponse<T = Record<string, unknown>> = T & {
-    wa_flow_response_params: {
+    wa_flow_response_params?: {
         flow_id: string;
         flow_name: string;
     };

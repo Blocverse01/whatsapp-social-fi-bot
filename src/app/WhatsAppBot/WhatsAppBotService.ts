@@ -582,7 +582,11 @@ class WhatsAppBotService {
             const flowResponse = response as FlowNfmReplyResponse;
             const flowResponseParams = flowResponse.wa_flow_response_params;
 
-            if (flowResponseParams.flow_id === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID) {
+            const flowIsAddBeneficiary = flowResponseParams
+                ? flowResponseParams.flow_id === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID
+                : 'asset_id' in flowResponse && 'beneficiary_id' in flowResponse;
+
+            if (flowIsAddBeneficiary) {
                 const addBeneficiaryFlowResponse = response as FlowNfmReplyResponse<{
                     asset_id: string;
                     beneficiary_id: string;
@@ -714,7 +718,7 @@ class WhatsAppBotService {
     ) {
         const { userPhoneNumber } = phoneParams;
 
-        if (SumSubService.SUM_SUB_IS_ACTIVE) {
+        if (SumSubService.SERVICE_IS_ACTIVE) {
             const userKycStatus = await UserService.getUserKycStatus(userPhoneNumber);
 
             if (
@@ -743,7 +747,7 @@ class WhatsAppBotService {
         phoneParams: PhoneNumberParams,
         assetId: AssetInteractiveButtonIds
     ) {
-        if (SumSubService.SUM_SUB_IS_ACTIVE) {
+        if (SumSubService.SERVICE_IS_ACTIVE) {
             const userKycStatus = await UserService.getUserKycStatus(phoneParams.userPhoneNumber);
 
             if (
