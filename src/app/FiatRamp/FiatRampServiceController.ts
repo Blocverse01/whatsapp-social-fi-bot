@@ -4,6 +4,7 @@ import { OK } from '@/constants/status-codes';
 import { handleRequestError } from '@/Resources/requestHelpers/handleRequestError';
 import { prettifyNumber } from '@/Resources/utils/currency';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
+import logger from '@/Resources/logger';
 
 class FiatRampServiceController {
     // TODO: replace with actual guards
@@ -12,7 +13,12 @@ class FiatRampServiceController {
     public static async receiveTransactionWebhook(req: Request, res: Response) {
         try {
             //get the origin IP of the request
-            const originIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            const originIp = req.headers['x-forwarded-for'] || req.ip;
+
+            logger.debug('Received transaction webhook', {
+                originIp,
+                body: req.body,
+            });
 
             //check if the request is coming from an allowed IP
             if (!FiatRampServiceController.ALLOWED_IPS.includes(originIp as string)) {
