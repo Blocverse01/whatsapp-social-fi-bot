@@ -56,7 +56,7 @@ export type SignAndSendTransactionParams = z.infer<typeof signAndSendTransaction
 export const transactionResponse = z.object({
     transaction_id: z.string(),
     network: supportedChainSchema,
-    status: z.enum(['success', 'submitted', 'failed']),
+    status: z.enum(['success', 'submitted', 'failed', 'pending']),
     contract_address: z.string().nullable(),
     explorer_url: z.string().url().nullable(),
     transaction_hash: z.string().nullable(),

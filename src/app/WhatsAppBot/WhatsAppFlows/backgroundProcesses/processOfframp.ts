@@ -20,7 +20,7 @@ async function processInBackground(txParams: ProcessOfframpInBackgroundParams) {
             transactionDetails,
         });
 
-        if (transactionDetails.status === 'submitted') {
+        if (transactionDetails.status === 'submitted' || transactionDetails.status === 'pending') {
             setTimeout(() => {
                 processInBackground(txParams);
             }, 5000);
