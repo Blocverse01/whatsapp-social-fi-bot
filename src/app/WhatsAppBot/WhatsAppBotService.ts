@@ -572,17 +572,18 @@ class WhatsAppBotService {
 
         logger.info('Checks map', {
             nameIsFlow: name === 'flow',
+            typeofResponseJson: typeof response_json,
             flowId: {
                 exists: Boolean(flowId),
-                value: flowId,
+                value: `${flowId}`,
             },
             beneficiaryId: {
                 exists: Boolean(beneficiaryId),
-                value: beneficiaryId,
+                value: `${beneficiaryId}`,
             },
             assetId: {
                 exists: Boolean(assetId),
-                value: assetId,
+                value: `${assetId}`,
             },
         });
 
