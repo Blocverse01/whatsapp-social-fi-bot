@@ -248,3 +248,18 @@ const getTransactionStatusResponseSchema = z.object({
 });
 
 export type GetTransactionStatusResponse = z.infer<typeof getTransactionStatusResponseSchema>;
+
+export const transactionWebhookPayloadSchema = z.object({
+    sequenceId: z.string(),
+    transactionStatus: transactionStatusSchema,
+    transactionOwnerId: z.string(),
+    transactionType: z.union([z.literal('on-ramp'), z.literal('off-ramp')]),
+    localAmount: z.number(),
+    usdAmount: z.number(),
+    chainName: z.string(),
+    tokenName: z.string(),
+    localCurrencySymbol: z.string(),
+    beneficiaryId: z.string().optional(),
+});
+
+export type TransactionWebhookPayload = z.infer<typeof transactionWebhookPayloadSchema>;

@@ -798,6 +798,15 @@ class WhatsAppBotService {
 
         return encryptResponse(response, aesKeyBuffer, initialVectorBuffer);
     }
+
+    public static async sendArbitraryTextMessage(userPhoneNumber: string, message: string) {
+        const messagePayload: WhatsAppTextMessage = MessageGenerators.generateTextMessage(
+            userPhoneNumber,
+            message
+        );
+
+        await WhatsAppBotService.sendWhatsappMessage(this.WA_BUSINESS_PHONE_NUMBER, messagePayload);
+    }
 }
 
 export default WhatsAppBotService;
