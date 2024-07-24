@@ -7,13 +7,19 @@ import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
 import logger from '@/Resources/logger';
 
 class FiatRampServiceController {
-    // TODO: replace with actual guards
+    // TODO: replace with better authorization guards
     private static ALLOWED_IPS = ['3.75.158.163', '3.125.183.140', '35.157.117.28'];
 
     public static async receiveTransactionWebhook(req: Request, res: Response) {
         try {
             //get the origin IP of the request
-            const originIp = req.headers['x-forwarded-for'] || req.ip;
+            let originIp;
+            const forwardedIps = req.headers['x-forwarded-for']?.toString().split(',');
+            if (forwardedIps) {
+                originIp = forwardedIps[0]; // Take the first IP address from X-Forwarded-For header
+            } else {
+                originIp = req.ip; // Fallback to req.ip if X-Forwarded-For is not available
+            }
 
             logger.debug('Received transaction webhook', {
                 originIp,
