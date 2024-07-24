@@ -92,6 +92,8 @@ class SumSubService {
 
     private static readonly API_TTL_IN_SECS = 600;
 
+    public static readonly SERVICE_IS_ACTIVE = false;
+
     private static generateAccessSignature(input: AccessSignatureInput) {
         const sha256Hash = crypto.createHmac('sha256', this.APP_TOKEN_SECRET);
 

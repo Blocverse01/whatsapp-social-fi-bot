@@ -713,20 +713,23 @@ class WhatsAppBotService {
         assetId: AssetInteractiveButtonIds
     ) {
         const { userPhoneNumber } = phoneParams;
-        const userKycStatus = await UserService.getUserKycStatus(userPhoneNumber);
 
-        if (
-            userKycStatus === 'unverified' ||
-            userKycStatus === 'rejected' ||
-            userKycStatus === 'pending'
-        ) {
-            await this.sendKycVerificationUrlMessage(phoneParams);
-            return;
-        }
+        if (SumSubService.SUM_SUB_IS_ACTIVE) {
+            const userKycStatus = await UserService.getUserKycStatus(userPhoneNumber);
 
-        if (userKycStatus === 'in_review') {
-            await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
-            return;
+            if (
+                userKycStatus === 'unverified' ||
+                userKycStatus === 'rejected' ||
+                userKycStatus === 'pending'
+            ) {
+                await this.sendKycVerificationUrlMessage(phoneParams);
+                return;
+            }
+
+            if (userKycStatus === 'in_review') {
+                await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
+                return;
+            }
         }
 
         await this.sendSelectSupportedCurrenciesMessage(
@@ -740,20 +743,22 @@ class WhatsAppBotService {
         phoneParams: PhoneNumberParams,
         assetId: AssetInteractiveButtonIds
     ) {
-        const userKycStatus = await UserService.getUserKycStatus(phoneParams.userPhoneNumber);
+        if (SumSubService.SUM_SUB_IS_ACTIVE) {
+            const userKycStatus = await UserService.getUserKycStatus(phoneParams.userPhoneNumber);
 
-        if (
-            userKycStatus === 'unverified' ||
-            userKycStatus === 'rejected' ||
-            userKycStatus === 'pending'
-        ) {
-            await this.sendKycVerificationUrlMessage(phoneParams);
-            return;
-        }
+            if (
+                userKycStatus === 'unverified' ||
+                userKycStatus === 'rejected' ||
+                userKycStatus === 'pending'
+            ) {
+                await this.sendKycVerificationUrlMessage(phoneParams);
+                return;
+            }
 
-        if (userKycStatus === 'in_review') {
-            await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
-            return;
+            if (userKycStatus === 'in_review') {
+                await WhatsAppBotService.sendKycInReviewMessage(phoneParams);
+                return;
+            }
         }
 
         await this.sendSelectSupportedCurrenciesMessage(
