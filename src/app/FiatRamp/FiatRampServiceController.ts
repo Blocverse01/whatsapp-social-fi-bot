@@ -49,7 +49,7 @@ class FiatRampServiceController {
                     message = `❌ Your transaction with the following details has failed:\n\n${transactionDetailsString}\n\nPlease contact support for assistance`;
                 }
 
-                if (transactionStatus === 'pending' || transactionStatus === 'processing') {
+                if (transactionStatus === 'processing') {
                     message = `⏳ Your transaction with the following details is being processed:\n\n${transactionDetailsString}\n\nPlease be patient`;
                 }
 
