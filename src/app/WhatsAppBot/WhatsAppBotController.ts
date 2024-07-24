@@ -47,15 +47,7 @@ export type Message = {
         };
         nfm_reply?: {
             name: 'flow';
-            response_json: {
-                beneficiary_id?: string;
-                asset_id?: string;
-                flow_token?: string;
-                wa_flow_response_params?: {
-                    flow_id: string;
-                    flow_name: string;
-                };
-            };
+            response_json: string;
         };
     };
 };

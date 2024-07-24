@@ -4,11 +4,13 @@ import {
     assetInteractiveButtonsIds,
     BaseInteractiveButtonIds,
     ExploreAssetActions,
+    FlowNfmReplyResponse,
     InteractiveButtonReplyTypes,
     InteractiveListReplyTypes,
     InteractiveNfmReplyActions,
     manageAssetActions,
     MORE_CURRENCIES_COMMAND_REGEX_PATTERN,
+    TriggerOfframpFromAddBeneficiaryActionParams,
     //WhatsAppInteractiveButton,
     WhatsAppInteractiveMessage,
     WhatsAppMessageType,
@@ -44,6 +46,8 @@ import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
 import { CountryCode } from 'libphonenumber-js';
 import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
 import { Message } from '@/app/WhatsAppBot/WhatsAppBotController';
+import { HttpException } from '@/Resources/exceptions/HttpException';
+import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -529,7 +533,11 @@ class WhatsAppBotService {
             return 'explore-asset';
         }
 
-        throw new Error('Unrecognized action');
+        throw new HttpException(
+            INTERNAL_SERVER_ERROR,
+            'No configured response action for interactive button reply',
+            { interactiveButtonId }
+        );
     }
 
     public static determineInteractiveListReplyAction(
@@ -557,56 +565,43 @@ class WhatsAppBotService {
             return 'trigger-offramp-flow';
         }
 
-        throw new Error('Unrecognized action');
+        throw new HttpException(
+            INTERNAL_SERVER_ERROR,
+            'No configured response action for interactive list reply',
+            { interactiveListReplyId }
+        );
     }
 
     public static determineInteractiveNfmReplyAction(
         nfmReply: Required<Message['interactive']>['nfm_reply']
     ) {
         const { name, response_json } = nfmReply;
-        const flowResponseParams = response_json.wa_flow_response_params;
+        const response = JSON.parse(response_json);
 
-        const flowId = flowResponseParams?.flow_id;
-        const beneficiaryId = response_json.beneficiary_id;
-        const assetId = response_json.asset_id;
+        if (name === 'flow') {
+            const flowResponse = response as FlowNfmReplyResponse;
+            const flowResponseParams = flowResponse.wa_flow_response_params;
 
-        logger.info('Checks map', {
-            nameIsFlow: name === 'flow',
-            typeofResponseJson: typeof response_json,
-            flowId: {
-                exists: Boolean(flowId),
-                value: `${flowId}`,
-            },
-            beneficiaryId: {
-                exists: Boolean(beneficiaryId),
-                value: `${beneficiaryId}`,
-            },
-            assetId: {
-                exists: Boolean(assetId),
-                value: `${assetId}`,
-            },
-        });
-
-        if (name === 'flow' && flowId && beneficiaryId && assetId) {
-            if (flowId === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID) {
+            if (flowResponseParams.flow_id === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID) {
+                const addBeneficiaryFlowResponse = response as FlowNfmReplyResponse<{
+                    asset_id: string;
+                    beneficiary_id: string;
+                }>;
                 return {
                     action: 'trigger-offramp-flow',
                     data: {
-                        assetId: assetId,
-                        beneficiaryId: beneficiaryId,
+                        assetId: addBeneficiaryFlowResponse.asset_id,
+                        beneficiaryId: addBeneficiaryFlowResponse.beneficiary_id,
                     },
-                } satisfies {
-                    action: InteractiveNfmReplyActions;
-                    data: {
-                        assetId: string;
-                        beneficiaryId: string;
-                    };
-                };
+                } satisfies TriggerOfframpFromAddBeneficiaryActionParams;
             }
         }
 
-        logger.info('Unrecognized action', { nfmReply });
-        throw new Error('Unrecognized action');
+        throw new HttpException(
+            INTERNAL_SERVER_ERROR,
+            'No configured response action for nfm reply',
+            { nfmReply }
+        );
     }
 
     private static async sendKycVerificationUrlMessage(phoneParams: PhoneNumberParams) {
