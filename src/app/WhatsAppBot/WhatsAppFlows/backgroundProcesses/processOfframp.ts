@@ -16,6 +16,10 @@ async function processInBackground(txParams: ProcessOfframpInBackgroundParams) {
     try {
         const transactionDetails = await WalletKitService.getTransactionById(onChainTransactionId);
 
+        logger.debug('Running process in background', {
+            transactionDetails,
+        });
+
         if (transactionDetails.status === 'submitted') {
             setTimeout(() => {
                 processInBackground(txParams);
