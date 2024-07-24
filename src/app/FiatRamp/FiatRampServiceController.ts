@@ -15,7 +15,7 @@ class FiatRampServiceController {
             const originIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
             //check if the request is coming from an allowed IP
-            if (!this.ALLOWED_IPS.includes(originIp as string)) {
+            if (!FiatRampServiceController.ALLOWED_IPS.includes(originIp as string)) {
                 return res.status(401).send('Unauthorized');
             }
 
@@ -37,10 +37,15 @@ class FiatRampServiceController {
                     message = `❌ Your transaction with the following details has failed:\n\n${transactionDetailsString}\n\nPlease contact support for assistance`;
                 }
 
-                await WhatsAppBotService.sendArbitraryTextMessage(
-                    payload.transactionOwnerId,
-                    message
-                );
+                if (transactionStatus === 'pending' || transactionStatus === 'processing') {
+                    message = `⏳ Your transaction with the following details is being processed:\n\n${transactionDetailsString}\n\nPlease be patient`;
+                }
+
+                if (message.trim())
+                    await WhatsAppBotService.sendArbitraryTextMessage(
+                        payload.transactionOwnerId,
+                        message
+                    );
             } else {
                 //TODO: handle on-ramp transaction
             }
