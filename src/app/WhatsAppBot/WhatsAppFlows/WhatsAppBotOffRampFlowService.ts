@@ -16,8 +16,10 @@ import { defaultAmountFixer, formatNumberAsCurrency } from '@/Resources/utils/cu
 import UserService from '@/app/User/UserService';
 import { CountryCode } from 'libphonenumber-js';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
-import WalletKitService from '@/app/WalletKit/WalletKitService';
 import logger from '@/Resources/logger';
+import { ProcessOfframpInBackgroundParams } from '@/app/WhatsAppBot/WhatsAppFlows/backgroundProcesses/processOfframp';
+import { spawn } from 'child_process';
+import path from 'path';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -66,8 +68,10 @@ type ProcessOfframpTransactionResponse = {
     message: string;
 };
 
+const BACKGROUND_PROCESSES_SCRIPTS_FOLDER = path.join(__dirname, 'backgroundProcesses');
+
 class WhatsAppBotOffRampFlowService {
-    private static FLOW_MODE: FlowMode = 'draft';
+    private static FLOW_MODE: FlowMode = 'published';
     private static FLOW_ID = '980070373602833';
     private static INITIAL_SCREEN = OffRampFlowScreens.AMOUNT_INPUT;
 
@@ -273,11 +277,7 @@ class WhatsAppBotOffRampFlowService {
                 tokenName: assetConfig.tokenName,
                 userWalletAddress: walletInfo.walletAddress,
                 hotWalletAddress,
-            })
-                .then(() => logger.info(`Offramp request sent for transactionId: ${transactionId}`))
-                .catch((e) =>
-                    logServiceError(e, `Offramp request failed for transactionId: ${transactionId}`)
-                );
+            });
 
             return {
                 status: 'processing',
@@ -285,7 +285,7 @@ class WhatsAppBotOffRampFlowService {
                     "Your transaction is currently being processed, we'd send updates on the status of your transaction in your DM",
             };
         } catch (error) {
-            logServiceError(error, 'Processing offramp transaction failed');
+            await logServiceError(error, 'Processing offramp transaction failed');
 
             return {
                 status: 'failed',
@@ -294,30 +294,27 @@ class WhatsAppBotOffRampFlowService {
         }
     }
 
-    public static async processOfframpInBackground(
+    public static processOfframpInBackground(
         onChainTransactionId: string,
         offrampParams: Omit<SendOfframpRequestPayload, 'txHash'>
     ) {
-        const transactionDetails = await WalletKitService.getTransactionById(onChainTransactionId);
+        const serializedParams = JSON.stringify({
+            ...offrampParams,
+            onChainTransactionId,
+        } satisfies ProcessOfframpInBackgroundParams);
 
-        if (transactionDetails.status === 'submitted') {
-            setTimeout(() => {
-                this.processOfframpInBackground(onChainTransactionId, offrampParams);
-            }, 5000);
-        }
-
-        if (transactionDetails.status === 'success' && transactionDetails.transaction_hash) {
-            try {
-                await FiatRampService.postOfframpTransaction({
-                    ...offrampParams,
-                    txHash: transactionDetails.transaction_hash,
-                    chainName: offrampParams.chainName.toUpperCase(),
-                    tokenName: offrampParams.tokenName.toUpperCase(),
-                });
-            } catch (error) {
-                logServiceError(error, 'Processing offramp transaction failed');
+        // Spawn the background process
+        const backgroundProcess = spawn(
+            'tsx',
+            [path.join(BACKGROUND_PROCESSES_SCRIPTS_FOLDER, 'processOfframp.ts'), serializedParams],
+            {
+                stdio: 'inherit', // Optional: Inherit stdio to see logs in the parent process console
             }
-        }
+        );
+
+        backgroundProcess.on('error', (err) => {
+            logger.error('Failed to start background process:', err);
+        });
     }
 
     public static generateOffRampFlowInitMessage(params: {
