@@ -563,31 +563,27 @@ class WhatsAppBotService {
     public static determineInteractiveNfmReplyAction(
         nfmReply: Required<Message['interactive']>['nfm_reply']
     ) {
-        const { name } = nfmReply;
-
-        const responseJson = nfmReply.response_json;
-        const flowResponseParams = nfmReply.response_json.wa_flow_response_params;
+        const { name, response_json } = nfmReply;
+        const flowResponseParams = response_json.wa_flow_response_params;
 
         const flowId = flowResponseParams?.flow_id;
+        const beneficiaryId = response_json.beneficiary_id;
+        const assetId = response_json.asset_id;
 
-        logger.info('NFM Reply props', {
-            name,
-            responseJson: responseJson ?? undefined,
-            raw: nfmReply,
+        logger.info('Checks map', {
+            nameIsFlow: name === 'flow',
+            flowIdExists: Boolean(flowId),
+            beneficiaryIdExists: Boolean(beneficiaryId),
+            assetIdExists: Boolean(assetId),
         });
 
-        if (name === 'flow') {
-            logger.info('Check for name === flow passed');
-            if (
-                flowId === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID &&
-                responseJson.beneficiary_id &&
-                responseJson.asset_id
-            )
+        if (name === 'flow' && flowId && beneficiaryId && assetId) {
+            if (flowId === WhatsAppBotAddBeneficiaryFlowService.FLOW_ID) {
                 return {
                     action: 'trigger-offramp-flow',
                     data: {
-                        assetId: responseJson.asset_id,
-                        beneficiaryId: responseJson.beneficiary_id,
+                        assetId: assetId,
+                        beneficiaryId: beneficiaryId,
                     },
                 } satisfies {
                     action: InteractiveNfmReplyActions;
@@ -596,6 +592,7 @@ class WhatsAppBotService {
                         beneficiaryId: string;
                     };
                 };
+            }
         }
 
         logger.info('Unrecognized action', { nfmReply });
