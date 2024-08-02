@@ -12,7 +12,7 @@ const logServiceError = async (error: unknown, message: string) => {
     const parsedError = parseUnknownError(error);
 
     await logger.error(message, {
-        ...parsedError,
+        error: JSON.stringify(parsedError),
     });
 };
 
@@ -22,7 +22,7 @@ const handleRequestError = (error: unknown, response: Response, logOnly?: true) 
     const requestUrl = response.req.originalUrl;
 
     logger.error(parsedError.message, {
-        ...parsedError,
+        error: JSON.stringify(parsedError),
         requestUrl,
     });
 
