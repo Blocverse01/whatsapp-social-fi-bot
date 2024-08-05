@@ -1,8 +1,12 @@
 import WalletKitService from '@/app/WalletKit/WalletKitService';
-import { SignAndSendTransactionParams } from '@/app/WalletKit/walletKitSchema';
+import {
+    CreateWalletKitWalletResponse,
+    SignAndSendTransactionParams,
+    SUPPORTED_CHAINS,
+} from '@/app/WalletKit/walletKitSchema';
 import { parseEther, toHex } from 'viem';
-
-const TESTNET_DEVELOPER_SECRET = 'testnet-secret';
+import { TEN_THOUSAND } from '../src/constants/numbers';
+import env from '../src/constants/env';
 
 describe('WalletKitService', () => {
     it('should create wallet successfully', async () => {
@@ -10,7 +14,7 @@ describe('WalletKitService', () => {
             network: 'Polygon',
             owner_id: '2348143100808',
             control_mode: 'developer',
-            developer_secret: TESTNET_DEVELOPER_SECRET,
+            developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
             name: 'Polygon Wallet',
             type: 'contract',
         });
@@ -41,7 +45,7 @@ describe('WalletKitService', () => {
                 to: '0xd73594Ddc43B368719a0003BcC1a520c17a16DeB',
                 value: toHex(parseEther('0.0006')),
             },
-            developer_secret: TESTNET_DEVELOPER_SECRET,
+            developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
         };
 
         const response = await WalletKitService.signAndSendTransaction(transactionParams);
@@ -67,10 +71,44 @@ describe('WalletKitService', () => {
             token: '0x2C0a6a30fAe9872513609819f667efA7e539021E',
             recipient: '0x2C0a6a30fAe9872513609819f667efA7e539021E',
             amount: '0.01',
-            developer_secret: TESTNET_DEVELOPER_SECRET,
+            developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
         });
 
         // Assert
         expect(response).toBeDefined();
     });
+
+    it(
+        'should create wallet for supported networks if it does not exist',
+        async () => {
+            const user_id = '2348143100808';
+
+            const userWallets = await WalletKitService.getUserWallets(user_id);
+
+            const promises: Array<Promise<CreateWalletKitWalletResponse>> = [];
+
+            SUPPORTED_CHAINS.forEach((network) => {
+                const wallet = userWallets.find((wallet) => wallet.network === network);
+
+                if (!wallet) {
+                    promises.push(
+                        WalletKitService.createUserWallet({
+                            network,
+                            owner_id: user_id,
+                            control_mode: 'developer',
+                            developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
+                            name: `${network} Wallet`,
+                            type: 'contract',
+                        })
+                    );
+                }
+            });
+
+            const responses = await Promise.all(promises);
+
+            // Assert
+            expect(responses.length).toBeGreaterThan(0);
+        },
+        TEN_THOUSAND * 100
+    );
 });

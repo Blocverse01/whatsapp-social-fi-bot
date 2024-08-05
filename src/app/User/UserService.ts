@@ -123,7 +123,9 @@ class UserService {
     public static async getUserWalletAssetsList(phoneNumber: string) {
         const userWallets = await WalletKitService.getUserWallets(phoneNumber);
 
-        return this.computeUserWalletAssetsList(userWallets);
+        return this.computeUserWalletAssetsList(
+            await this.syncUserWalletsWithSupportedChains(phoneNumber, userWallets)
+        );
     }
 
     public static async getUserWalletAssetOrThrow(phoneNumber: string, assetListItemId: string) {
@@ -248,6 +250,40 @@ class UserService {
             default:
                 return 'pending';
         }
+    }
+
+    public static async syncUserWalletsWithSupportedChains(
+        userPhoneNumber: string,
+        userWallets: Array<CreateWalletKitWalletResponse>
+    ) {
+        const promises: Array<Promise<CreateWalletKitWalletResponse>> = [];
+
+        SUPPORTED_CHAINS.forEach((network) => {
+            const wallet = userWallets.find((wallet) => wallet.network === network);
+
+            if (!wallet) {
+                promises.push(
+                    WalletKitService.createUserWallet({
+                        network,
+                        owner_id: userPhoneNumber,
+                        control_mode: 'developer',
+                        developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
+                        name: `${network} Wallet`,
+                        type: 'contract',
+                    })
+                );
+            } else {
+                promises.push(Promise.resolve(wallet));
+            }
+        });
+
+        const settledPromises = await Promise.allSettled(promises);
+
+        const fulfilledSettlements = settledPromises.filter(
+            (settlement) => settlement.status === 'fulfilled'
+        ) as Array<PromiseFulfilledResult<CreateWalletKitWalletResponse>>;
+
+        return fulfilledSettlements.map((settlement) => settlement.value);
     }
 }
 
