@@ -27,6 +27,7 @@ import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/Whats
 import { CountryCode } from 'libphonenumber-js';
 import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
 import WhatsAppBotTransferToWalletFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotTransferToWalletFlowService';
+import WhatsAppBotOnRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOnRampFlowService';
 
 export type Message = {
     id: string;
@@ -527,6 +528,24 @@ class WhatsAppBotController {
 
             const response =
                 await WhatsAppBotTransferToWalletFlowService.receiveDataExchange(decryptedBody);
+
+            return res.send(
+                WhatsAppBotService.encryptFlowResponse(response, {
+                    initialVectorBuffer,
+                    aesKeyBuffer,
+                })
+            );
+        } catch (error) {
+            handleRequestError(error, res);
+        }
+    }
+
+    public static async onRampFlowDataExchange(req: Request, res: Response) {
+        try {
+            const { decryptedBody, initialVectorBuffer, aesKeyBuffer } =
+                requestDecryptedDataFlowExchange(req);
+
+            const response = await WhatsAppBotOnRampFlowService.receiveDataExchange(decryptedBody);
 
             return res.send(
                 WhatsAppBotService.encryptFlowResponse(response, {
