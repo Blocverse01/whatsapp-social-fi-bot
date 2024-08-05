@@ -137,7 +137,7 @@ describe('FiatRampService', () => {
                     userWalletAddress: '0x2C0a6a30fAe9872513609819f667efA7e539021E',
                 };
 
-                const response = await FiatRampService.postOnrampTransaction(transactionPayload);
+                const response = await FiatRampService.postOnRampTransaction(transactionPayload);
 
                 console.log(response);
 

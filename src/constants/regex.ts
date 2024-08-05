@@ -1,4 +1,4 @@
-import { ExploreAssetActions } from '@/app/WhatsAppBot/WhatsAppBotType';
+import { AssetInteractiveButtonIds, ExploreAssetActions } from '@/app/WhatsAppBot/WhatsAppBotType';
 
 export const SELL_BENEFICIARY_AMOUNT_PATTERN =
     /sell:(?<sell>[^|]+)\|beneficiaryId:(?<beneficiaryId>[^|]+)\|amount:(?<amount>\d+)/;
@@ -10,9 +10,9 @@ export const SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN =
 export const SELL_ASSET_DESTINATION_CHOICE_REGEX =
     /sell:(?<assetId>[^|]+)\|beneficiaryAction:(?<beneficiaryAction>[^|]+)\|countryCode:(?<countryCode>[^|]+)/;
 
-// create a regex pattern for `${assetActionId}:${purchaseAssetId}|currency:${country.code}`
+// create a regex pattern for `${assetActionId}:${purchaseAssetId}|currency:${country.currency}|countryCode:${country.code}`
 export const TRADE_ASSET_REGEX =
-    /(?<assetActionId>[^:]+):(?<purchaseAssetId>[^|]+)\|currency:(?<currency>[^|]+)/;
+    /(?<assetActionId>[^:]+):(?<purchaseAssetId>[^|]+)\|currency:(?<currency>[^|]+)\|countryCode:(?<countryCode>[^|]+)/;
 
 export type SellAssetToBeneficiaryMatchGroups = {
     sell: string;
@@ -27,8 +27,9 @@ export type SellAssetDestinationChoiceMatchGroups = {
 
 export type TradeAssetMatchGroups = {
     assetActionId: Extract<ExploreAssetActions, 'buy' | 'sell'>;
-    purchaseAssetId: string;
+    purchaseAssetId: AssetInteractiveButtonIds;
     currency: string;
+    countryCode: string;
 };
 
 // generic function for extracting any regex groups, with a type parameter

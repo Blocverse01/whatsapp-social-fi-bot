@@ -4,7 +4,7 @@ import {
     DecryptedFlowDataExchange,
     WhatsAppInteractiveMessage,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
-import { FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
+import { DropdownOption, FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
 import logger from '@/Resources/logger';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { CountryCode } from 'libphonenumber-js';
@@ -22,7 +22,7 @@ enum AddBeneficiaryFlowScreens {
 
 type ScreenDataPayload = {
     ACCOUNT_TYPE_SCREEN: {
-        account_types: { id: string; title: string }[];
+        account_types: Array<DropdownOption>;
         asset_id: string;
         user_id: string;
         country_code: string;
@@ -32,10 +32,10 @@ type ScreenDataPayload = {
         channel_id: string;
         asset_id: string;
         user_id: string;
-        supported_banks: { id: string; title: string }[];
+        supported_banks: Array<DropdownOption>;
     };
     MOBILE_MONEY_FORM_SCREEN: {
-        supported_mobile_providers: { id: string; title: string; description: string }[];
+        supported_mobile_providers: Array<Required<DropdownOption>>;
         country_code: string;
         channel_id: string;
         asset_id: string;
@@ -54,7 +54,7 @@ type ScreenDataPayload = {
 type DataExchangePayload = {
     ACCOUNT_TYPE_SCREEN: {
         account_type: string;
-        account_types: { id: string; title: string }[];
+        account_types: Array<DropdownOption>;
         asset_id: string;
         user_id: string;
         country_code: string;
@@ -67,10 +67,10 @@ type DataExchangePayload = {
         account_number: string;
         asset_id: string;
         user_id: string;
-        supported_banks: { id: string; title: string }[];
+        supported_banks: Array<DropdownOption>;
     };
     MOBILE_MONEY_FORM_SCREEN: {
-        supported_mobile_providers: { id: string; title: string; description: string }[];
+        supported_mobile_providers: Array<Required<DropdownOption>>;
         country_code: string;
         channel_id: string;
         mobile_provider: string;
@@ -151,7 +151,7 @@ class WhatsAppBotAddBeneficiaryFlowService {
 
     private static determineSelectedAccountType(
         account_type: string,
-        account_types: { id: string; title: string }[]
+        account_types: Array<DropdownOption>
     ) {
         const selectedAccountType = account_types.find((type) => type.id === account_type);
 
@@ -167,10 +167,7 @@ class WhatsAppBotAddBeneficiaryFlowService {
         };
     }
 
-    private static determineSelectedBank(
-        bank: string,
-        supported_banks: { id: string; title: string }[]
-    ) {
+    private static determineSelectedBank(bank: string, supported_banks: Array<DropdownOption>) {
         const selectedBank = supported_banks.find((type) => type.id === bank);
 
         if (!selectedBank) {
@@ -185,7 +182,7 @@ class WhatsAppBotAddBeneficiaryFlowService {
 
     private static determineSelectedMobileProvider(
         mobileProvider: string,
-        supportedMobileProviders: { id: string; title: string; description: string }[]
+        supportedMobileProviders: Array<Required<DropdownOption>>
     ) {
         const selectedMobileProvider = supportedMobileProviders.find(
             (type) => type.id === mobileProvider
@@ -206,7 +203,7 @@ class WhatsAppBotAddBeneficiaryFlowService {
         asset: AssetConfig;
         countryCode: string;
         recipient: string;
-        accountTypes: { id: string; title: string }[];
+        accountTypes: Array<DropdownOption>;
     }) {
         const { asset, countryCode, recipient, accountTypes } = params;
 

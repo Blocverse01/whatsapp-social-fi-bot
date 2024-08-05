@@ -84,6 +84,16 @@ export const onrampTransactionPayloadSchema = z.object({
     chainName: z.string(),
     tokenName: z.string(),
     userWalletAddress: z.string(),
+    userDetails: z.object({
+        phoneNumber: z.string(),
+        kycDocumentNumber: z.string(),
+        kycIdType: z.string(),
+        kycDateOfBirth: z.string(),
+        firstName: z.string(),
+        lastName: z.string(),
+        address: z.string().optional(),
+        country: z.string(),
+    }),
 });
 
 export type OnrampTransactionPayload = z.infer<typeof onrampTransactionPayloadSchema>;

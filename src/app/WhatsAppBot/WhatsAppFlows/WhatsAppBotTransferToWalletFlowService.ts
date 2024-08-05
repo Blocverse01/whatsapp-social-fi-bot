@@ -7,7 +7,6 @@ import logger from '@/Resources/logger';
 import WalletAssetManagementService from '@/app/WalletAssetManagement/WalletAssetManagementService';
 import { SIXTEEN, TWO } from '@/constants/numbers';
 import { decimalToString, fixNumber } from '@/Resources/utils/currency';
-import { AssetConfig } from '@/Resources/web3/tokens';
 import { generateRandomHexString } from '@/Resources/utils/encryption';
 import { getAssetConfigOrThrow } from '@/config/whatsAppBot';
 import UserService from '@/app/User/UserService';
@@ -19,8 +18,8 @@ import { UserAssetInfo } from '@/app/User/userSchema';
 import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
 import env from '@/constants/env';
-
-type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
+import { type FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
+import { isAddress } from 'viem';
 
 enum TransferToWalletFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -80,7 +79,7 @@ class WhatsAppBotTransferToWalletFlowService {
         const { action, screen, data } = requestBody;
 
         if (action === 'INIT') {
-            // Using Preview data because initialization should typically be done from `WhatsAppBotService.beginTransferToWalletFlow`
+            // Using Preview data because initialization should typically be done from `WhatsAppBotService.handleWithdrawAssetAction`
             return this.previewInitializationFlow(requestBody);
         }
 
@@ -154,6 +153,18 @@ class WhatsAppBotTransferToWalletFlowService {
                 screen: TransferToWalletFlowScreens.ERROR_FEEDBACK,
                 data: {
                     message: insufficientBalanceMessage,
+                    status: 'failed',
+                    asset_id: data.asset_id,
+                    is_transfer_transaction: true,
+                } satisfies ScreenDataPayload['FEEDBACK_SCREEN'],
+            };
+        }
+
+        if (!isAddress(data.wallet_address)) {
+            return {
+                screen: TransferToWalletFlowScreens.ERROR_FEEDBACK,
+                data: {
+                    message: 'Invalid wallet address',
                     status: 'failed',
                     asset_id: data.asset_id,
                     is_transfer_transaction: true,

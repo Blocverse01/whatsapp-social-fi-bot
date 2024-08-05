@@ -50,6 +50,7 @@ import { Message } from '@/app/WhatsAppBot/WhatsAppBotController';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import WhatsAppBotTransferToWalletFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotTransferToWalletFlowService';
+import WhatsAppBotOnRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOnRampFlowService';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -633,7 +634,7 @@ class WhatsAppBotService {
                             rows: [
                                 ...countriesToDisplay.map((country) => {
                                     return {
-                                        id: `${assetActionId}:${purchaseAssetId}|currency:${country.code}`,
+                                        id: `${assetActionId}:${purchaseAssetId}|currency:${country.currencySymbol}|countryCode:${country.code}`,
                                         title: country.country,
                                         description: `Currency: ${country.currencySymbol}`,
                                     };
@@ -743,6 +744,40 @@ class WhatsAppBotService {
         });
 
         await this.sendWhatsappMessage(phoneParams.businessPhoneNumberId, message);
+    }
+
+    public static async beginOnrampFlowMessage(
+        phoneParams: PhoneNumberParams,
+        params: {
+            assetId: AssetInteractiveButtonIds;
+            currencySymbol: string;
+            countryCode: string;
+        }
+    ) {
+        const { userPhoneNumber } = phoneParams;
+        const { assetId, currencySymbol, countryCode } = params;
+
+        const asset = getAssetConfigOrThrow(assetId);
+
+        const { paymentChannels } = await FiatRampService.getPaymentMethods(
+            countryCode as CountryCode,
+            'onramp'
+        );
+
+        const paymentMethods = paymentChannels.map((channel) => ({
+            id: channel.channelId,
+            title: FiatRampService.formatPaymentMethodName(channel.channelName, 'onramp'),
+        }));
+
+        const flowMessage = WhatsAppBotOnRampFlowService.generateOnRampFlowInitMessage({
+            recipient: userPhoneNumber,
+            asset,
+            localCurrency: currencySymbol,
+            countryCode,
+            paymentMethods,
+        });
+
+        await this.sendWhatsappMessage(phoneParams.businessPhoneNumberId, flowMessage);
     }
 
     public static async sendKycVerifiedMessage(userPhoneNumber: string) {

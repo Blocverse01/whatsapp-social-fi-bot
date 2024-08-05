@@ -22,8 +22,7 @@ import path from 'path';
 import { generateRandomHexString } from '@/Resources/utils/encryption';
 import { SIXTEEN } from '@/constants/numbers';
 import { getAssetConfigOrThrow } from '@/config/whatsAppBot';
-
-type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
+import { type FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
 
 enum OffRampFlowScreens {
     AMOUNT_INPUT = 'AMOUNT_INPUT',
@@ -65,7 +64,7 @@ type FiatToReceivePattern =
 
 const SECTION_SEPARATOR = '\n---------------------------------\n' as const;
 
-type ProcessOfframpTransactionResponse = {
+type ProcessOffRampTransactionResponse = {
     status: 'processing' | 'complete' | 'failed' | 'pending';
     message: string;
 };
@@ -240,7 +239,7 @@ class WhatsAppBotOffRampFlowService {
         tokenAmount: number;
         tokenAmountToDebit: number;
         beneficiaryId: string;
-    }): Promise<ProcessOfframpTransactionResponse> {
+    }): Promise<ProcessOffRampTransactionResponse> {
         const { fiatAmount, userId, assetId, tokenAmountToDebit, beneficiaryId, tokenAmount } =
             params;
 

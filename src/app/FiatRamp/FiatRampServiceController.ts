@@ -35,32 +35,30 @@ class FiatRampServiceController {
 
             const payload = transactionWebhookPayloadSchema.parse(req.body);
 
-            if (payload.transactionType === 'off-ramp') {
-                const { transactionStatus } = payload;
+            const { transactionStatus } = payload;
 
-                const transactionDetailsString = `💲Sell ${payload.usdAmount} ${payload.tokenName} on ${payload.chainName} for ${payload.localCurrencySymbol} ${prettifyNumber(payload.localAmount)}`;
+            const transactionKeyword = payload.transactionType === 'off-ramp' ? 'Sell' : 'Buy';
 
-                let message = '';
+            const transactionDetailsString = `💲${transactionKeyword} ${payload.usdAmount} ${payload.tokenName} on ${payload.chainName} for ${payload.localCurrencySymbol} ${prettifyNumber(payload.localAmount)}`;
 
-                if (transactionStatus === 'complete') {
-                    message = `✅ Your transaction with the following details has been completed:\n\n${transactionDetailsString}\n\nExpect your funds within 1 - 5 minutes`;
-                }
-                if (transactionStatus === 'failed') {
-                    message = `❌ Your transaction with the following details has failed:\n\n${transactionDetailsString}\n\nPlease contact support for assistance`;
-                }
+            let message = '';
 
-                if (transactionStatus === 'processing') {
-                    message = `⏳ Your transaction with the following details is being processed:\n\n${transactionDetailsString}\n\nPlease be patient`;
-                }
-
-                if (message.trim())
-                    await WhatsAppBotService.sendArbitraryTextMessage(
-                        payload.transactionOwnerId,
-                        message
-                    );
-            } else {
-                //TODO: handle on-ramp transaction
+            if (transactionStatus === 'complete') {
+                message = `✅ Your transaction with the following details has been completed:\n\n${transactionDetailsString}\n\nExpect your funds within 1 - 5 minutes`;
             }
+            if (transactionStatus === 'failed') {
+                message = `❌ Your transaction with the following details has failed:\n\n${transactionDetailsString}\n\nPlease contact support for assistance`;
+            }
+
+            if (transactionStatus === 'processing') {
+                message = `⏳ Your transaction with the following details is being processed:\n\n${transactionDetailsString}\n\nPlease be patient`;
+            }
+
+            if (message.trim())
+                await WhatsAppBotService.sendArbitraryTextMessage(
+                    payload.transactionOwnerId,
+                    message
+                );
         } catch (error) {
             handleRequestError(error, res, true);
         }

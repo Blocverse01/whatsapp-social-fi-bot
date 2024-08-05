@@ -168,7 +168,7 @@ class FiatRampService {
         return response.data.data;
     }
 
-    public static async postOnrampTransaction(transactionPayload: OnrampTransactionPayload) {
+    public static async postOnRampTransaction(transactionPayload: OnrampTransactionPayload) {
         const requestUrl = `${this.API_URL}${POST_ONRAMP}`;
 
         const response = await axios.post<SendOnrampTransactionResponse>(

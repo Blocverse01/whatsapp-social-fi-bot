@@ -380,6 +380,7 @@ class WhatsAppBotController {
                             assetActionId: tradeAction,
                             purchaseAssetId: assetInteractiveId,
                             currency,
+                            countryCode,
                         } = extractTradeAssetGroups(interactiveListId);
 
                         if (tradeAction === ExploreAssetActions.SELL_ASSET) {
@@ -389,11 +390,26 @@ class WhatsAppBotController {
                                     businessPhoneNumberId,
                                 },
                                 assetInteractiveId,
-                                currency
+                                countryCode
+                            );
+                            return;
+                        }
+
+                        if (tradeAction === ExploreAssetActions.BUY_ASSET) {
+                            await WhatsAppBotService.beginOnrampFlowMessage(
+                                {
+                                    userPhoneNumber: from,
+                                    businessPhoneNumberId,
+                                },
+                                {
+                                    assetId: assetInteractiveId,
+                                    currencySymbol: currency,
+                                    countryCode: countryCode as CountryCode,
+                                }
                             );
                         }
-                        return;
 
+                        return;
                     case 'explore-asset-action':
                         const [_interactiveListId, assetAction, assetId] = interactiveListId.match(
                             ASSET_ACTION_REGEX_PATTERN

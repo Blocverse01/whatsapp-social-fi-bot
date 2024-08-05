@@ -4,7 +4,12 @@ import { HttpException } from '@/Resources/exceptions/HttpException';
 import env from '@/constants/env';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
-import { KycStatus, UserAssetInfo, UserAssetItem } from '@/app/User/userSchema';
+import {
+    KycStatus,
+    UserAssetInfo,
+    UserAssetItem,
+    userIdentityInfoSchema,
+} from '@/app/User/userSchema';
 import { getDummyUsdValue, TokenNames } from '@/Resources/web3/tokens';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { UserRecord } from '@/Db/xata';
@@ -73,6 +78,31 @@ class UserService {
         } catch (err) {
             throw new HttpException(INTERNAL_SERVER_ERROR, 'User info not updated!');
         }
+    }
+
+    public static async getUserIdentityInfo(phoneNumber: string) {
+        const user = await this.getUserByPhoneNumber(phoneNumber);
+
+        if (!user) {
+            throw new HttpException(BAD_REQUEST, 'User not found');
+        }
+
+        const kycStatus = this.formatKycStatus(user.kycStatus);
+
+        if (kycStatus !== 'verified') {
+            return null;
+        }
+
+        const validation = userIdentityInfoSchema.safeParse({
+            ...user,
+            kycStatus,
+        });
+
+        if (!validation.success) {
+            return null;
+        }
+
+        return validation.data;
     }
 
     public static async updateUserKycStatus(
@@ -236,11 +266,15 @@ class UserService {
             throw new HttpException(BAD_REQUEST, 'User not found');
         }
 
-        if (!user.kycStatus?.trim()) {
+        return this.formatKycStatus(user.kycStatus);
+    }
+
+    private static formatKycStatus(kycStatus: string | null | undefined): KycStatus {
+        if (!kycStatus?.trim()) {
             return 'unverified';
         }
 
-        switch (user.kycStatus) {
+        switch (kycStatus) {
             case 'VERIFIED':
                 return 'verified';
             case 'IN_REVIEW':

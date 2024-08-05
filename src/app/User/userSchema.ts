@@ -27,3 +27,17 @@ export type UserAssetInfo = z.infer<typeof userAssetInfoSchema>;
 export const kycStatus = z.enum(['verified', 'in_review', 'unverified', 'rejected', 'pending']);
 
 export type KycStatus = z.infer<typeof kycStatus>;
+
+export const userIdentityInfoSchema = z.object({
+    phoneNumber: z.string(),
+    kycDocumentNumber: z.string(),
+    kycIdType: z.string(),
+    kycDateOfBirth: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    address: z.string().optional(),
+    country: z.string(),
+    kycStatus: kycStatus,
+});
+
+export type UserIdentityInfo = z.infer<typeof userIdentityInfoSchema>;
