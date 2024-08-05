@@ -37,6 +37,9 @@ type ScreenPayload = {
         user_id: string;
         local_currency: string;
         country_code: string;
+        init_values: {
+            payment_method: string;
+        };
     };
     TRANSACTION_SUMMARY: {
         display_data: {
@@ -613,8 +616,6 @@ class WhatsAppBotOnRampFlowService {
         const assetLabel = `${asset.tokenName} (${asset.network})`;
         const buyMessage = `Buy ${assetLabel} with ${localCurrency}`;
 
-        console.log(paymentMethods);
-
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
@@ -638,16 +639,13 @@ class WhatsAppBotOnRampFlowService {
                                 asset_label: assetLabel,
                                 asset_id: asset.listItemId,
                                 user_id: recipient,
-                                beneficiary: {
-                                    local_currency: localCurrency,
-                                    payment_methods: paymentMethods,
-                                    asset_id: asset.listItemId,
-                                    asset_label: assetLabel,
-                                    user_id: recipient,
-                                    dynamic_page_title: buyMessage,
-                                    country_code: countryCode,
-                                } satisfies ScreenPayload['TRANSACTION_DETAILS'],
-                            },
+                                local_currency: localCurrency,
+                                payment_methods: paymentMethods,
+                                country_code: countryCode,
+                                init_values: {
+                                    payment_method: paymentMethods[0].id,
+                                },
+                            } satisfies ScreenPayload['TRANSACTION_DETAILS'],
                         },
                     },
                 },
@@ -680,6 +678,9 @@ class WhatsAppBotOnRampFlowService {
                 },
             ],
             country_code: 'NG',
+            init_values: {
+                payment_method: 'bank_transfer',
+            },
         } satisfies ScreenPayload['TRANSACTION_DETAILS'];
 
         return {

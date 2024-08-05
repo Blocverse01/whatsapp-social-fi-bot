@@ -759,8 +759,6 @@ class WhatsAppBotService {
 
         const asset = getAssetConfigOrThrow(assetId);
 
-        console.log({ countryCode, currencySymbol });
-
         const { paymentChannels } = await FiatRampService.getPaymentMethods(
             countryCode as CountryCode,
             'onramp'
@@ -770,6 +768,13 @@ class WhatsAppBotService {
             id: channel.channelId,
             title: FiatRampService.formatPaymentMethodName(channel.channelName, 'onramp'),
         }));
+
+        if (paymentMethods.length === 0) {
+            await this.sendArbitraryTextMessage(
+                userPhoneNumber,
+                `Sorry, we currently do not support buying crypto for ${currencySymbol}.`
+            );
+        }
 
         const flowMessage = WhatsAppBotOnRampFlowService.generateOnRampFlowInitMessage({
             recipient: userPhoneNumber,
