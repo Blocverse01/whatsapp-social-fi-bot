@@ -9,6 +9,7 @@ import {
     SendOfframpRequestPayload,
 } from '@/app/FiatRamp/fiatRampSchema';
 import { TEN_THOUSAND } from '@/constants/numbers';
+import UserService from '../src/app/User/UserService';
 
 describe('FiatRampService', () => {
     describe('Core', () => {
@@ -63,6 +64,8 @@ describe('FiatRampService', () => {
             'Should Get Payment Methods',
             async () => {
                 const response = await FiatRampService.getPaymentMethods('NG', 'onramp');
+
+                console.log(response);
 
                 const responseValidation = getPaymentMethodsResponseSchema
                     .pick({
@@ -127,6 +130,12 @@ describe('FiatRampService', () => {
                     throw new Error('Bank channel not found');
                 }
 
+                const userDetails = await UserService.getUserIdentityInfo('2348143100808');
+
+                if (!userDetails) {
+                    throw new Error('User identity info not found');
+                }
+
                 const transactionPayload: OnrampTransactionPayload = {
                     channelId: bankChannel.channelId,
                     country: 'NG',
@@ -135,6 +144,7 @@ describe('FiatRampService', () => {
                     chainName: 'ETHEREUM',
                     tokenName: 'USDT',
                     userWalletAddress: '0x2C0a6a30fAe9872513609819f667efA7e539021E',
+                    userDetails: userDetails,
                 };
 
                 const response = await FiatRampService.postOnRampTransaction(transactionPayload);

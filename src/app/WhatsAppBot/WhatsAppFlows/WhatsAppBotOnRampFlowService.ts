@@ -613,6 +613,8 @@ class WhatsAppBotOnRampFlowService {
         const assetLabel = `${asset.tokenName} (${asset.network})`;
         const buyMessage = `Buy ${assetLabel} with ${localCurrency}`;
 
+        console.log(paymentMethods);
+
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {

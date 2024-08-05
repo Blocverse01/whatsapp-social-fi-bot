@@ -759,6 +759,8 @@ class WhatsAppBotService {
 
         const asset = getAssetConfigOrThrow(assetId);
 
+        console.log({ countryCode, currencySymbol });
+
         const { paymentChannels } = await FiatRampService.getPaymentMethods(
             countryCode as CountryCode,
             'onramp'
