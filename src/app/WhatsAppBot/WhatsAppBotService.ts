@@ -28,7 +28,8 @@ import {
 } from '@/app/FiatRamp/fiatRampSchema';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
-import { getAssetConfigOrThrow, TokenNames } from '@/Resources/web3/tokens';
+import { TokenNames } from '@/Resources/web3/tokens';
+import { getAssetConfigOrThrow } from '@/config/whatsAppBot';
 import {
     SELL_BENEFICIARY_AMOUNT_PATTERN,
     SELL_ASSET_TO_BENEFICIARY_REGEX_PATTERN,
@@ -48,6 +49,7 @@ import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlow
 import { Message } from '@/app/WhatsAppBot/WhatsAppBotController';
 import { HttpException } from '@/Resources/exceptions/HttpException';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
+import WhatsAppBotTransferToWalletFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotTransferToWalletFlowService';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -357,54 +359,7 @@ class WhatsAppBotService {
         await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);
     }
 
-    /**
-     * @deprecated
-     */
-    public static async selectAmountMessage(
-        businessPhoneNumberId: string,
-        recipient: string,
-        beneficiaryId: string
-    ) {
-        const interactiveMessage: WhatsAppInteractiveMessage = {
-            type: 'interactive',
-            interactive: {
-                type: 'button',
-                body: {
-                    text: `How much would you like to withdraw?`,
-                },
-                action: {
-                    buttons: [
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: `${beneficiaryId}|amount:2`,
-                                title: '$2',
-                            },
-                        },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: `${beneficiaryId}|amount:5`,
-                                title: '$5',
-                            },
-                        },
-                        {
-                            type: 'reply',
-                            reply: {
-                                id: `${beneficiaryId}|amount:10`,
-                                title: '$10',
-                            },
-                        },
-                    ],
-                },
-            },
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: recipient,
-        };
-        await this.sendWhatsappMessage(businessPhoneNumberId, interactiveMessage);
-    }
-
+    // TODO: Remove dead code
     public static async isMessageProcessed(messageId: string) {
         try {
             const data = await UserService.getUserByMessageId(messageId);
@@ -465,6 +420,9 @@ class WhatsAppBotService {
         await WhatsAppBotService.sendWhatsappMessage(businessPhoneNumberId, messagePayload);
     }
 
+    /**
+     * @deprecated
+     */
     public static async processTransactionInDemoMode(
         userPhoneNumber: string,
         businessPhoneNumberId: string,
@@ -770,6 +728,21 @@ class WhatsAppBotService {
             ExploreAssetActions.SELL_ASSET,
             assetId
         );
+    }
+
+    public static async handleWithdrawAssetAction(
+        phoneParams: PhoneNumberParams,
+        assetId: AssetInteractiveButtonIds
+    ) {
+        const { userPhoneNumber } = phoneParams;
+        const assetConfig = getAssetConfigOrThrow(assetId);
+
+        const message = WhatsAppBotTransferToWalletFlowService.generateTransferToWalletInitMessage({
+            recipient: userPhoneNumber,
+            asset: assetConfig,
+        });
+
+        await this.sendWhatsappMessage(phoneParams.businessPhoneNumberId, message);
     }
 
     public static async sendKycVerifiedMessage(userPhoneNumber: string) {

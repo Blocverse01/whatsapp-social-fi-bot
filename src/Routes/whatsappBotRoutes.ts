@@ -16,6 +16,11 @@ whatsappBotRoutes
         '/flows/beneficiary-data-exchange',
         decryptFlowDataExchange,
         WhatsAppBotController.addBeneficiaryFlowDataExchange
+    )
+    .post(
+        '/flows/wallet-transfer',
+        decryptFlowDataExchange,
+        WhatsAppBotController.transferToWalletFlowDataExchange
     );
 
 export default whatsappBotRoutes;

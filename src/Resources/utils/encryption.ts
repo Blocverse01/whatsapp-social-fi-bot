@@ -63,3 +63,6 @@ export const encryptResponse = (
 export const convertBase64ToAsciiString = (key: string) =>
     Buffer.from(key, 'base64').toString('ascii');
 export const convertAsciiStringToBase64 = (key: string) => Buffer.from(key).toString('base64');
+
+export const generateRandomHexString = (length: number) =>
+    crypto.randomBytes(length).toString('hex');

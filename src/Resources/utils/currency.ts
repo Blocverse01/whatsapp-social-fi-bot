@@ -1,4 +1,4 @@
-import { TWO } from '@/constants/numbers';
+import { TEN, TWO } from '@/constants/numbers';
 
 export const formatNumberAsCurrency = (number: number, currency: string): string => {
     const formatter = new Intl.NumberFormat('en-US', {
@@ -22,3 +22,8 @@ export const fixNumber = (number: number, decimalPlaces: number): number => {
 };
 
 export const defaultAmountFixer = (number: number): number => fixNumber(number, TWO);
+
+// Convert a decimal number to a string, ensuring that the radix is 10
+export const decimalToString = (number: number): string => {
+    return number.toString(TEN);
+};

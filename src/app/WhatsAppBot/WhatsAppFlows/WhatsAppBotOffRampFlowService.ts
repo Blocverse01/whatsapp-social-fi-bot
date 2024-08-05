@@ -3,8 +3,7 @@ import {
     DecryptedFlowDataExchange,
     WhatsAppInteractiveMessage,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
-import crypto from 'node:crypto';
-import { AssetConfig, getAssetConfigOrThrow, TokenNames } from '@/Resources/web3/tokens';
+import { AssetConfig, TokenNames } from '@/Resources/web3/tokens';
 import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import {
@@ -20,6 +19,9 @@ import logger from '@/Resources/logger';
 import { ProcessOfframpInBackgroundParams } from '@/app/WhatsAppBot/WhatsAppFlows/backgroundProcesses/processOfframp';
 import { spawn } from 'child_process';
 import path from 'path';
+import { generateRandomHexString } from '@/Resources/utils/encryption';
+import { SIXTEEN } from '@/constants/numbers';
+import { getAssetConfigOrThrow } from '@/config/whatsAppBot';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -348,7 +350,7 @@ class WhatsAppBotOffRampFlowService {
                     name: 'flow',
                     parameters: {
                         flow_message_version: '3',
-                        flow_token: crypto.randomBytes(16).toString('hex'),
+                        flow_token: generateRandomHexString(SIXTEEN),
                         flow_id: this.FLOW_ID,
                         mode: this.FLOW_MODE,
                         flow_cta: 'Sell Asset',

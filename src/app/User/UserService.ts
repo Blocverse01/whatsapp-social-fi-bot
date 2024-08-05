@@ -5,18 +5,12 @@ import env from '@/constants/env';
 import { CreateWalletKitWalletResponse, SUPPORTED_CHAINS } from '@/app/WalletKit/walletKitSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
 import { KycStatus, UserAssetInfo, UserAssetItem } from '@/app/User/userSchema';
-import {
-    ethConfig,
-    getDummyUsdValue,
-    maticConfig,
-    TokenNames,
-    usdcBaseConfig,
-    usdtPolygonConfig,
-} from '@/Resources/web3/tokens';
+import { getDummyUsdValue, TokenNames } from '@/Resources/web3/tokens';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { UserRecord } from '@/Db/xata';
 import { fixNumber, formatNumberAsCurrency, prettifyNumber } from '@/Resources/utils/currency';
 import { THREE } from '@/constants/numbers';
+import { ENABLED_ASSETS, getAssetConfigOrThrow } from '@/config/whatsAppBot';
 
 class UserService {
     private static USER_TABLE = dbClient.User;
@@ -112,48 +106,18 @@ class UserService {
     public static computeUserWalletAssetsList(
         userWallets: Array<CreateWalletKitWalletResponse>
     ): Array<UserAssetItem> {
-        const baseWallet = userWallets.find((wallet) => wallet.network === 'Base');
+        const enabledAssets = userWallets.map((wallet) => {
+            const assets = ENABLED_ASSETS.filter((asset) => asset.network === wallet.network);
+            return assets.map((asset) => ({
+                listItemId: asset.listItemId,
+                walletAddress: wallet.address,
+                name: asset.tokenName,
+                tokenAddress: asset.tokenAddress,
+                network: asset.network,
+            }));
+        });
 
-        const polygonWallet = userWallets.find((wallet) => wallet.network === 'Polygon');
-
-        const polygonAssets = polygonWallet
-            ? [
-                  {
-                      listItemId: usdtPolygonConfig.listItemId,
-                      walletAddress: polygonWallet.address,
-                      name: usdtPolygonConfig.tokenName,
-                      tokenAddress: usdtPolygonConfig.tokenAddress,
-                      network: usdtPolygonConfig.network,
-                  },
-                  {
-                      listItemId: maticConfig.listItemId,
-                      walletAddress: polygonWallet.address,
-                      name: maticConfig.tokenName,
-                      tokenAddress: maticConfig.tokenAddress,
-                      network: maticConfig.network,
-                  },
-              ]
-            : [];
-        const baseAssets = baseWallet
-            ? [
-                  {
-                      listItemId: usdcBaseConfig.listItemId,
-                      walletAddress: baseWallet.address,
-                      name: usdcBaseConfig.tokenName,
-                      tokenAddress: usdcBaseConfig.tokenAddress,
-                      network: usdcBaseConfig.network,
-                  },
-                  {
-                      listItemId: ethConfig.listItemId,
-                      walletAddress: baseWallet.address,
-                      name: ethConfig.tokenName,
-                      tokenAddress: ethConfig.tokenAddress,
-                      network: ethConfig.network,
-                  },
-              ]
-            : [];
-
-        return [...baseAssets, ...polygonAssets];
+        return enabledAssets.flat();
     }
 
     public static async getUserWalletAssetsList(phoneNumber: string) {
@@ -163,15 +127,20 @@ class UserService {
     }
 
     public static async getUserWalletAssetOrThrow(phoneNumber: string, assetListItemId: string) {
-        const assetsList = await this.getUserWalletAssetsList(phoneNumber);
+        const assetConfig = getAssetConfigOrThrow(assetListItemId);
 
-        const asset = assetsList.find((asset) => asset.listItemId === assetListItemId);
+        const wallet = await WalletKitService.getUserWalletByNetwork(
+            phoneNumber,
+            assetConfig.network
+        );
 
-        if (!asset) {
-            throw new HttpException(BAD_REQUEST, `Asset not found`);
-        }
-
-        return asset;
+        return {
+            listItemId: assetConfig.listItemId,
+            walletAddress: wallet.address,
+            name: assetConfig.tokenName,
+            tokenAddress: assetConfig.tokenAddress,
+            network: assetConfig.network,
+        };
     }
 
     public static async getUserAssetInfo(
@@ -203,6 +172,7 @@ class UserService {
             listItemId: assetListItemId,
             assetName: asset.name,
             assetNetwork: asset.network,
+            tokenAddress: asset.tokenAddress,
         };
     }
 

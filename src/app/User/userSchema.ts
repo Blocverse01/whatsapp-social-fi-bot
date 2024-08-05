@@ -17,8 +17,9 @@ export const userAssetInfoSchema = z.object({
     tokenBalance: z.string(),
     walletAddress: z.string(),
     listItemId: z.string(),
-    assetName: z.string(),
-    assetNetwork: z.string(),
+    assetName: z.nativeEnum(TokenNames),
+    assetNetwork: supportedChainSchema,
+    tokenAddress: z.string(),
 });
 
 export type UserAssetInfo = z.infer<typeof userAssetInfoSchema>;

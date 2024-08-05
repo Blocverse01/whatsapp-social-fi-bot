@@ -4,12 +4,13 @@ import {
     DecryptedFlowDataExchange,
     WhatsAppInteractiveMessage,
 } from '@/app/WhatsAppBot/WhatsAppBotType';
-import crypto from 'node:crypto';
 import { FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
 import logger from '@/Resources/logger';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { CountryCode } from 'libphonenumber-js';
 import { parseUnknownError } from '@/Resources/requestHelpers/handleRequestError';
+import { generateRandomHexString } from '@/Resources/utils/encryption';
+import { SIXTEEN } from '@/constants/numbers';
 
 enum AddBeneficiaryFlowScreens {
     ACCOUNT_TYPE = 'ACCOUNT_TYPE',
@@ -220,7 +221,7 @@ class WhatsAppBotAddBeneficiaryFlowService {
                     name: 'flow',
                     parameters: {
                         flow_message_version: '3',
-                        flow_token: crypto.randomBytes(16).toString('hex'),
+                        flow_token: generateRandomHexString(SIXTEEN),
                         flow_id: this.FLOW_ID,
                         mode: this.FLOW_MODE,
                         flow_cta: 'Add Beneficiary',

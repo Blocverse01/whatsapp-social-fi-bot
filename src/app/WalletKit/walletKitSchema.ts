@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isAddress, isHex } from 'viem';
 
-export const SUPPORTED_CHAINS = ['Polygon', 'Base'] as const;
+export const SUPPORTED_CHAINS = ['Polygon', 'Base', 'Optimism', 'Ethereum'] as const;
 export const supportedChainSchema = z.enum(SUPPORTED_CHAINS);
 export type SupportedChain = z.infer<typeof supportedChainSchema>;
 

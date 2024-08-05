@@ -26,6 +26,7 @@ import { requestDecryptedDataFlowExchange } from '@/Resources/requestHelpers/req
 import WhatsAppBotOffRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOffRampFlowService';
 import { CountryCode } from 'libphonenumber-js';
 import WhatsAppBotAddBeneficiaryFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotAddBeneficiaryFlowService';
+import WhatsAppBotTransferToWalletFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotTransferToWalletFlowService';
 
 export type Message = {
     id: string;
@@ -424,7 +425,13 @@ class WhatsAppBotController {
                         }
 
                         if (assetAction === 'withdraw') {
-                            // TODO: handle withdraw asset to wallet
+                            await WhatsAppBotService.handleWithdrawAssetAction(
+                                {
+                                    userPhoneNumber: from,
+                                    businessPhoneNumberId,
+                                },
+                                assetId
+                            );
                         }
 
                         if (assetAction === 'deposit') {
@@ -485,6 +492,25 @@ class WhatsAppBotController {
 
             const response =
                 await WhatsAppBotAddBeneficiaryFlowService.receiveDataExchange(decryptedBody);
+
+            return res.send(
+                WhatsAppBotService.encryptFlowResponse(response, {
+                    initialVectorBuffer,
+                    aesKeyBuffer,
+                })
+            );
+        } catch (error) {
+            handleRequestError(error, res);
+        }
+    }
+
+    public static async transferToWalletFlowDataExchange(req: Request, res: Response) {
+        try {
+            const { decryptedBody, initialVectorBuffer, aesKeyBuffer } =
+                requestDecryptedDataFlowExchange(req);
+
+            const response =
+                await WhatsAppBotTransferToWalletFlowService.receiveDataExchange(decryptedBody);
 
             return res.send(
                 WhatsAppBotService.encryptFlowResponse(response, {

@@ -27,7 +27,8 @@
       ]
     }
   },
+  "include": ["src"],
   "exclude": [
-    "node_modules"
+    "node_modules", "build", "jest.config.ts", "tests", "eslint.config.mjs"
   ]
 }
