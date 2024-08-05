@@ -2,13 +2,13 @@ import { UserAssetItem } from '@/app/User/userSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
 import env from '@/constants/env';
 import { decimalToString, fixNumber } from '@/Resources/utils/currency';
-import { TWO } from '@/constants/numbers';
+import { TWO, ZERO } from '@/constants/numbers';
 import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
 import { isAddress } from 'viem';
 import { calculateStableTokenTransferTransactionFee } from '@/app/WalletAssetManagement/config';
 
 class WalletAssetManagementService {
-    private static readonly SHOULD_CHARGE_TRANSACTION_FEE = false;
+    public static readonly SHOULD_CHARGE_TRANSACTION_FEE = false;
 
     public static async transferUserAssetToWallet(
         asset: UserAssetItem,
@@ -49,6 +49,8 @@ class WalletAssetManagementService {
         amount: string,
         network: SupportedChain
     ) {
+        if (!this.SHOULD_CHARGE_TRANSACTION_FEE) return ZERO;
+
         return fixNumber(calculateStableTokenTransferTransactionFee(network, Number(amount)), TWO);
     }
 }
