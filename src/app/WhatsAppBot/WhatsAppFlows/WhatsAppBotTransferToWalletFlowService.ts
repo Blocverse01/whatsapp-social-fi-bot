@@ -15,6 +15,7 @@ import { TransactionResponse } from '@/app/WalletKit/walletKitSchema';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import { spawn } from 'child_process';
 import path from 'path';
+import { UserAssetInfo } from '@/app/User/userSchema';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -30,12 +31,14 @@ type ScreenDataPayload = {
         asset_label: string;
         asset_id: string;
         user_id: string;
+        user_balance: string;
     };
     TRANSACTION_SUMMARY: {
         amount: string;
         asset_id: string;
         user_id: string;
         wallet_address: string;
+        asset_label: string;
         transaction_fee: string;
     };
     FEEDBACK_SCREEN: {
@@ -126,6 +129,7 @@ class WhatsAppBotTransferToWalletFlowService {
             data: {
                 ...data,
                 transaction_fee: decimalToString(transactionFee),
+                asset_label: `${asset.tokenName} (${asset.network})`,
             } as ScreenDataPayload['TRANSACTION_SUMMARY'],
         };
     }
@@ -237,11 +241,11 @@ class WhatsAppBotTransferToWalletFlowService {
 
     public static generateTransferToWalletInitMessage(params: {
         recipient: string;
-        asset: AssetConfig;
+        asset: UserAssetInfo;
     }) {
         const { asset, recipient } = params;
 
-        const assetLabel = `${asset.tokenName} (${asset.network})`;
+        const assetLabel = `${asset.assetName} (${asset.assetNetwork})`;
 
         const transferMessage = `Transfer ${assetLabel}`;
 
@@ -268,6 +272,7 @@ class WhatsAppBotTransferToWalletFlowService {
                                 asset_label: assetLabel,
                                 asset_id: asset.listItemId,
                                 user_id: recipient,
+                                user_balance: `Your balance: ${asset.tokenBalance} ${asset.assetName}`,
                             } satisfies ScreenDataPayload['TRANSACTION_DETAILS'],
                         },
                     },

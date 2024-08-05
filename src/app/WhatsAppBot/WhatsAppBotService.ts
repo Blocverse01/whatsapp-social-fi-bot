@@ -735,11 +735,11 @@ class WhatsAppBotService {
         assetId: AssetInteractiveButtonIds
     ) {
         const { userPhoneNumber } = phoneParams;
-        const assetConfig = getAssetConfigOrThrow(assetId);
+        const assetInfo = await UserService.getUserAssetInfo(userPhoneNumber, assetId);
 
         const message = WhatsAppBotTransferToWalletFlowService.generateTransferToWalletInitMessage({
             recipient: userPhoneNumber,
-            asset: assetConfig,
+            asset: assetInfo,
         });
 
         await this.sendWhatsappMessage(phoneParams.businessPhoneNumberId, message);
