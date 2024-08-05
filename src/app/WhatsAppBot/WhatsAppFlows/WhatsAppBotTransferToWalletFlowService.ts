@@ -143,7 +143,9 @@ class WhatsAppBotTransferToWalletFlowService {
 
         const transactionFee = parseFloat(data.transaction_fee);
         const amount = parseFloat(data.amount);
-        const totalAmount = fixNumber(amount + transactionFee, TWO);
+        const totalAmount = WalletAssetManagementService.SHOULD_CHARGE_TRANSACTION_FEE
+            ? fixNumber(amount + transactionFee, TWO)
+            : amount;
 
         if (assetBalance < totalAmount) {
             const insufficientBalanceMessage = `You're trying to pay: ${totalAmount} ${walletInfo.assetName}\nYou have only: ${assetBalance} ${walletInfo.assetName}`;
