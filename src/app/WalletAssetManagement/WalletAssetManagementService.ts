@@ -1,13 +1,15 @@
 import { UserAssetItem } from '@/app/User/userSchema';
 import WalletKitService from '@/app/WalletKit/WalletKitService';
 import env from '@/constants/env';
-import { fixNumber } from '@/Resources/utils/currency';
-import { TEN, TWO } from '@/constants/numbers';
+import { decimalToString, fixNumber } from '@/Resources/utils/currency';
+import { TWO } from '@/constants/numbers';
 import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
 import { isAddress } from 'viem';
 import { calculateStableTokenTransferTransactionFee } from '@/app/WalletAssetManagement/config';
 
 class WalletAssetManagementService {
+    private static readonly SHOULD_CHARGE_TRANSACTION_FEE = false;
+
     public static async transferUserAssetToWallet(
         asset: UserAssetItem,
         walletAddress: string,
@@ -17,14 +19,24 @@ class WalletAssetManagementService {
             throw new Error('Only Tokens are supported for transfer at the moment');
         }
 
-        const transactionFee = this.calculateStableTokenTransferTransactionFee(
-            amount,
-            asset.network
-        );
-        const totalAmount = fixNumber(Number(amount) + transactionFee, TWO);
+        if (this.SHOULD_CHARGE_TRANSACTION_FEE) {
+            const transactionFee = this.calculateStableTokenTransferTransactionFee(
+                amount,
+                asset.network
+            );
+
+            await WalletKitService.transferToken({
+                amount: decimalToString(transactionFee),
+                network: asset.network,
+                developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
+                token: asset.tokenAddress,
+                from: asset.walletAddress,
+                recipient: env.TRANSACTION_FEE_RECIPIENT, // An EVM address to receive the transaction fee. EVM for now because we are only supporting EVM chains ATM
+            });
+        }
 
         return await WalletKitService.transferToken({
-            amount: totalAmount.toString(TEN),
+            amount: amount,
             network: asset.network,
             developer_secret: env.WALLET_KIT_DEVELOPER_SECRET,
             token: asset.tokenAddress,

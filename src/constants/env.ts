@@ -43,6 +43,7 @@ const envSchema = z.object({
     WA_PHONE_NUMBER_ID: notEmptyStringSchema('WA_PHONE_NUMBER_ID'),
     WA_FLOW_PRIVATE_KEY: notEmptyStringSchema('WA_FLOW_PRIVATE_KEY'),
     WA_FLOW_PRIVATE_KEY_SEED_PHRASE: notEmptyStringSchema('WA_FLOW_PRIVATE_KEY_SEED_PHRASE'),
+    TRANSACTION_FEE_RECIPIENT: notEmptyStringSchema('TRANSACTION_FEE_RECIPIENT'),
 });
 
 const env = envSchema.parse(process.env);

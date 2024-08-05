@@ -9,12 +9,14 @@ type WaitForTransactionReceiptInBackgroundParams = {
     transactionId: string;
     userId: string;
     destination: string;
+    amount: string;
+    assetLabel: string;
 };
 
 const transactionParams: WaitForTransactionReceiptInBackgroundParams = JSON.parse(process.argv[2]);
 
 async function processInBackground(params: WaitForTransactionReceiptInBackgroundParams) {
-    const { transactionId, userId } = params;
+    const { transactionId, userId, amount, destination, assetLabel } = params;
 
     try {
         const transactionDetails = await WalletKitService.getTransactionById(transactionId);
@@ -28,7 +30,7 @@ async function processInBackground(params: WaitForTransactionReceiptInBackground
         if (transactionDetails.status === 'success' && transactionDetails.transaction_hash) {
             const message = MessageGenerators.generateTextMessage(
                 userId,
-                `Your Transaction with the following details has been successfully processed: \n\nTransaction ID: ${transactionId}\nTransaction Hash: ${transactionDetails.transaction_hash}\nTransaction Type: Transfer to Wallet\nDestination: ${params.destination}\n\nView In Explorer: ${transactionDetails.explorer_url}`
+                `✅ Your Transaction with the following details has been completed:\n\n🔀 Transfer ${amount} ${assetLabel} to ${destination}\n\n➡️ Request ID: ${transactionId}\n\n➡️ Transaction Hash: ${transactionDetails.transaction_hash}\n\n🔍 View In Explorer: ${transactionDetails.explorer_url}`
             );
 
             await WhatsAppBotService.sendWhatsappMessage(env.WA_PHONE_NUMBER_ID, message);
@@ -37,7 +39,7 @@ async function processInBackground(params: WaitForTransactionReceiptInBackground
         if (transactionDetails.status === 'failed') {
             const message = MessageGenerators.generateTextMessage(
                 userId,
-                `Your Transaction with the following details has failed: \n\nTransaction ID: ${transactionId}\nTransaction Type: Transfer to Wallet\nDestination: ${params.destination}\n\nPlease try again later or contact support for assistance.`
+                `❌ Your Transaction with the following details has failed:\n\n🔀 Transfer ${amount} ${assetLabel} to ${destination}\n\n➡️ Request ID: ${transactionId}\n\nPlease try again later or contact support for assistance.`
             );
 
             await WhatsAppBotService.sendWhatsappMessage(env.WA_PHONE_NUMBER_ID, message);

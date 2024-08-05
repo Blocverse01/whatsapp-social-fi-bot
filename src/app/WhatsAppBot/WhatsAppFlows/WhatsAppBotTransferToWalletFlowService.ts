@@ -16,6 +16,9 @@ import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import { spawn } from 'child_process';
 import path from 'path';
 import { UserAssetInfo } from '@/app/User/userSchema';
+import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
+import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
+import env from '@/constants/env';
 
 type FlowMode = Required<WhatsAppInteractiveMessage['interactive']['action']>['parameters']['mode'];
 
@@ -182,16 +185,28 @@ class WhatsAppBotTransferToWalletFlowService {
                 };
             }
 
+            const assetLabel = `${walletInfo.assetName} (${walletInfo.assetNetwork})`;
+
+            const message = MessageGenerators.generateTextMessage(
+                data.user_id,
+                `⏳ Your transaction with the following details is being processed:\n\n🔀 Transfer ${amount} ${assetLabel} to ${data.wallet_address}\n\n➡️ Request ID: ${transactionResponse.transaction_id}`
+            );
+
+            await WhatsAppBotService.sendWhatsappMessage(env.WA_PHONE_NUMBER_ID, message);
+
             this.waitForTransactionReceiptInBackground({
                 transactionId: transactionResponse.transaction_id,
                 userId: data.user_id,
                 destination: data.wallet_address,
+                amount: data.amount,
+                assetLabel,
             });
 
             return {
                 screen: TransferToWalletFlowScreens.PROCESSING_FEEDBACK,
                 data: {
-                    message: 'Transaction submitted successfully',
+                    message:
+                        "Your transaction is currently being processed, we'll send updates on the status of your transaction in your DM",
                     status: transactionResponse.status,
                     asset_id: data.asset_id,
                     is_transfer_transaction: true,
@@ -219,6 +234,8 @@ class WhatsAppBotTransferToWalletFlowService {
         transactionId: string;
         userId: string;
         destination: string;
+        amount: string;
+        assetLabel: string;
     }) {
         const transactionParams = JSON.stringify(params);
 
