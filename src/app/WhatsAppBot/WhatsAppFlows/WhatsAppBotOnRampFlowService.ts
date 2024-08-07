@@ -18,6 +18,7 @@ import UserService from '@/app/User/UserService';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
 import { isAddress } from 'viem';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
+import { generateOnrampTransactionInitiatedMessage } from '@/Resources/utils/bot-message-utils';
 
 enum OnRampFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -318,8 +319,6 @@ class WhatsAppBotOnRampFlowService {
         } = input;
 
         try {
-            const assetWallet = await UserService.getUserWalletAssetOrThrow(user_id, asset_id);
-
             if (account_type === 'phone') {
                 const mobileProviders = await FiatRampService.getSupportedMobileProviders(
                     transaction_details.channel_id
@@ -374,7 +373,10 @@ class WhatsAppBotOnRampFlowService {
                     }
                 }
 
-                const verifiedUserDetails = await UserService.getUserIdentityInfo(user_id);
+                const [assetWallet, verifiedUserDetails] = await Promise.all([
+                    UserService.getUserAssetWalletOrThrow(user_id, asset_id),
+                    UserService.getUserIdentityInfo(user_id),
+                ]);
 
                 if (!verifiedUserDetails) {
                     return {
@@ -413,8 +415,14 @@ class WhatsAppBotOnRampFlowService {
                     };
                 }
 
-                // TODO: make message more readable, and remove duplicated formatting
-                const message = `Your transaction with the following details:\n\n💲 Buy ${transaction_details.token_amount} ${assetWallet.name} on ${assetWallet.network} for ${formatNumberAsCurrency(parseFloat(transaction_details.fiat_to_pay), local_currency)} has been initiated\n\nPlease make payment to complete the transaction.\n\nHere's the payment details in case you missed it:\n\nAccount Number: ${onrampResponse.bankInfo.accountNumber}\n\nAccount Name: ${onrampResponse.bankInfo.accountName}\n\nBank Name: ${onrampResponse.bankInfo.bankName}\n\nAmount: ${formatNumberAsCurrency(parseFloat(transaction_details.fiat_to_pay), local_currency)}\n\nAfter you have made payment, we'd send you status updates on the transaction.`;
+                const message = generateOnrampTransactionInitiatedMessage({
+                    tokenAmount: transaction_details.token_amount,
+                    assetNetwork: assetWallet.network,
+                    assetName: assetWallet.name,
+                    bankInfo: onrampResponse.bankInfo,
+                    localCurrency: local_currency,
+                    fiatToPay: transaction_details.fiat_to_pay,
+                });
 
                 WhatsAppBotService.sendArbitraryTextMessage(user_id, message).then(() => {
                     logger.info('WhatsApp message sent');
@@ -546,7 +554,7 @@ class WhatsAppBotOnRampFlowService {
         }
 
         try {
-            const assetWallet = await UserService.getUserWalletAssetOrThrow(user_id, asset_id);
+            const assetWallet = await UserService.getUserAssetWalletOrThrow(user_id, asset_id);
 
             const verifiedUserDetails = await UserService.getUserIdentityInfo(user_id);
 

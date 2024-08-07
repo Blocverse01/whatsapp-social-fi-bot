@@ -123,11 +123,12 @@ class FiatRampService {
         countryCode: CountryCode,
         route: 'onramp' | 'offramp'
     ) {
-        const rates = await this.getRates(currencySymbol);
+        const [rates, fee] = await Promise.all([
+            this.getRates(currencySymbol),
+            this.getTransactionFee(countryCode, route),
+        ]);
 
         const rate = route === 'onramp' ? rates.buy : rates.sell;
-
-        const fee = await this.getTransactionFee(countryCode, route);
 
         return {
             rate,

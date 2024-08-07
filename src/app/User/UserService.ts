@@ -158,7 +158,7 @@ class UserService {
         );
     }
 
-    public static async getUserWalletAssetOrThrow(phoneNumber: string, assetListItemId: string) {
+    public static async getUserAssetWalletOrThrow(phoneNumber: string, assetListItemId: string) {
         const assetConfig = getAssetConfigOrThrow(assetListItemId);
 
         const wallet = await WalletKitService.getUserWalletByNetwork(
@@ -179,20 +179,20 @@ class UserService {
         phoneNumber: string,
         assetListItemId: string
     ): Promise<UserAssetInfo> {
-        const asset = await this.getUserWalletAssetOrThrow(phoneNumber, assetListItemId);
+        const assetWallet = await this.getUserAssetWalletOrThrow(phoneNumber, assetListItemId);
 
-        if (!asset) {
+        if (!assetWallet) {
             throw new HttpException(BAD_REQUEST, `Asset not found`);
         }
 
         const tokenBalance = await WalletKitService.getBalance(
-            asset.walletAddress,
-            asset.network,
-            asset.tokenAddress
+            assetWallet.walletAddress,
+            assetWallet.network,
+            assetWallet.tokenAddress
         );
 
         const tokenBalanceAsNumber = parseFloat(tokenBalance);
-        const usdBalance = getDummyUsdValue(asset.name as TokenNames) * tokenBalanceAsNumber;
+        const usdBalance = getDummyUsdValue(assetWallet.name as TokenNames) * tokenBalanceAsNumber;
 
         const usdBalanceDisplay = formatNumberAsCurrency(fixNumber(usdBalance, THREE), 'USD');
         const tokenBalanceDisplay = prettifyNumber(tokenBalanceAsNumber, THREE);
@@ -200,11 +200,11 @@ class UserService {
         return {
             usdDisplayBalance: usdBalanceDisplay,
             tokenBalance: tokenBalanceDisplay,
-            walletAddress: asset.walletAddress,
+            walletAddress: assetWallet.walletAddress,
             listItemId: assetListItemId,
-            assetName: asset.name,
-            assetNetwork: asset.network,
-            tokenAddress: asset.tokenAddress,
+            assetName: assetWallet.name,
+            assetNetwork: assetWallet.network,
+            tokenAddress: assetWallet.tokenAddress,
         };
     }
 

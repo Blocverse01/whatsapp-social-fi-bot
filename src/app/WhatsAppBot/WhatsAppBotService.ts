@@ -405,7 +405,7 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         listItemId: string
     ) {
-        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, listItemId);
+        const asset = await UserService.getUserAssetWalletOrThrow(userPhoneNumber, listItemId);
 
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,
@@ -429,7 +429,7 @@ class WhatsAppBotService {
         businessPhoneNumberId: string,
         params: { assetId: string; beneficiaryId: string; usdAmount: string }
     ) {
-        const asset = await UserService.getUserWalletAssetOrThrow(userPhoneNumber, params.assetId);
+        const asset = await UserService.getUserAssetWalletOrThrow(userPhoneNumber, params.assetId);
 
         // Can only offramp USDC in demo mode
         if (asset.name !== TokenNames.USDC) {
