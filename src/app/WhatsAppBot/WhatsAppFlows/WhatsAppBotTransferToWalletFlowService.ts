@@ -322,11 +322,10 @@ class WhatsAppBotTransferToWalletFlowService {
 
         const transferMessage = `Withdraw ${assetLabel}`;
 
+        /**
+         * Updating this will require updating the regex pattern in `this.USER_BALANCE_PATTERN`
+         * */
         const userBalanceMessage = `Your balance: ${asset.tokenBalance} ${asset.assetName}`;
-
-        if (!userBalanceMessage.match(this.USER_BALANCE_PATTERN)) {
-            throw new Error('User balance message does not match pattern');
-        }
 
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
@@ -351,7 +350,7 @@ class WhatsAppBotTransferToWalletFlowService {
                                 asset_label: assetLabel,
                                 asset_id: asset.listItemId,
                                 user_id: recipient,
-                                user_balance: `Your balance: ${asset.tokenBalance} ${asset.assetName}`,
+                                user_balance: userBalanceMessage,
                             } satisfies ScreenDataPayload['TRANSACTION_DETAILS'],
                         },
                     },
