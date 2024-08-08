@@ -41,8 +41,11 @@ export function generateOfframpProcessingMessage(params: {
     assetName: string;
     assetNetwork: string;
     localCurrency: string;
+    fiatAmount: string;
 }): string {
-    const { tokenAmount, assetName, assetNetwork, localCurrency } = params;
+    const { tokenAmount, assetName, assetNetwork, localCurrency, fiatAmount } = params;
 
-    return `🔔 New transaction initiated.\n\n🧾 *Summary*:\nSell ${tokenAmount} ${assetName} on ${assetNetwork} for ${localCurrency}\n\n-------------------------------------------------------\n_Your transaction has been created, we'll send you updates on your transaction's status._\n-------------------------------------------------------`;
+    const fiatAmountFormatted = formatNumberAsCurrency(parseFloat(fiatAmount), localCurrency);
+
+    return `🔔 New transaction initiated.\n\n🧾 *Summary*:\nSell ${tokenAmount} ${assetName} on ${assetNetwork} for ${fiatAmountFormatted}\n\n-------------------------------------------------------\n_Your transaction has been created, we'll send you updates on your transaction's status._\n-------------------------------------------------------`;
 }

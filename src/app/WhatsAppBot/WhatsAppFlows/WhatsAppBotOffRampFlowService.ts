@@ -11,6 +11,7 @@ import {
     SendOfframpRequestPayload,
 } from '@/app/FiatRamp/fiatRampSchema';
 import {
+    decimalToString,
     defaultAmountFixer,
     fixNumber,
     formatNumberAsCurrency,
@@ -198,13 +199,13 @@ class WhatsAppBotOffRampFlowService {
 
         const usdAmount =
             amount_denomination === beneficiary.currency_symbol
-                ? defaultAmountFixer(amountAsNumber / conversionRate)
+                ? amountAsNumber / conversionRate
                 : amountAsNumber;
 
-        const transactionFee = defaultAmountFixer(usdAmount * fee);
+        const transactionFee = fixNumber(usdAmount * fee, THREE);
 
         const token_amount: TokenAmountPattern = this.generateTokenAmountPattern(
-            usdAmount,
+            fixNumber(usdAmount, THREE),
             assetConfig,
             transactionFee
         );
@@ -235,13 +236,13 @@ class WhatsAppBotOffRampFlowService {
                     fiat_to_receive,
                 },
                 transaction_details: {
-                    token_amount: usdAmount.toString(),
+                    token_amount: decimalToString(fixNumber(usdAmount, THREE)),
                     transaction_fee: transactionFee.toString(),
                     fiat_to_receive: fiatEquivalent.toString(),
                     beneficiary_id: beneficiary.id,
                     token_amount_to_debit: amountToDebit.toString(),
-                    fiat_currency: beneficiary.currency_symbol,
                 },
+                fiat_currency: beneficiary.currency_symbol,
             },
         };
     }
@@ -273,6 +274,7 @@ class WhatsAppBotOffRampFlowService {
                 assetName: assetConfig.tokenName,
                 assetNetwork: assetConfig.network,
                 localCurrency: fiat_currency,
+                fiatAmount: fiat_to_receive,
             });
 
             WhatsAppBotService.sendArbitraryTextMessage(user_id, message).then(() =>
