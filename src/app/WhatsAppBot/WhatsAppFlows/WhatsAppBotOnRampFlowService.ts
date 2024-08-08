@@ -41,6 +41,7 @@ type ScreenPayload = {
         user_id: string;
         local_currency: string;
         country_code: string;
+        amount_input_label: string;
         init_values: {
             payment_method: string;
             wallet_address?: string;
@@ -290,6 +291,7 @@ class WhatsAppBotOnRampFlowService {
                         amount,
                     },
                     error_messages: errorMessages,
+                    amount_input_label: `Amount (${assetConfig.tokenName})`,
                 } satisfies ScreenPayload['TRANSACTION_DETAILS'],
             };
         }
@@ -723,6 +725,7 @@ class WhatsAppBotOnRampFlowService {
                                 init_values: {
                                     payment_method: paymentMethods[0].id,
                                 },
+                                amount_input_label: `Amount (${asset.tokenName})`,
                             } satisfies ScreenPayload['TRANSACTION_DETAILS'],
                         },
                     },
@@ -759,6 +762,7 @@ class WhatsAppBotOnRampFlowService {
             init_values: {
                 payment_method: 'bank_transfer',
             },
+            amount_input_label: 'Amount (USDT)',
         } satisfies ScreenPayload['TRANSACTION_DETAILS'];
 
         return {
