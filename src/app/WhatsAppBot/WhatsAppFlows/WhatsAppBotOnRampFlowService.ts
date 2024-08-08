@@ -297,7 +297,7 @@ class WhatsAppBotOnRampFlowService {
         const { rate: conversionRate, fee } = await FiatRampService.getQuotes(
             local_currency,
             country_code as CountryCode,
-            'offramp'
+            'onramp'
         );
 
         const amountAsNumber = parseFloat(amount.trim());
