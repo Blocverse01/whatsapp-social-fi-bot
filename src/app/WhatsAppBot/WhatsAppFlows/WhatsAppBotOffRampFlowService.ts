@@ -73,7 +73,7 @@ type AmountInputScreenData = {
     beneficiary: DataExchangedFromAmountInputScreen['beneficiary'];
     amount_denominations: Array<DropdownOption>;
     init_values?: {
-        amount: string;
+        amount?: string;
         amount_denomination: string;
     };
     user_balance: string;
@@ -443,17 +443,20 @@ class WhatsAppBotOffRampFlowService {
                                 amount_denomination_label: 'Provide amount in',
                                 amount_denominations: [
                                     {
-                                        id: beneficiary.country.currencySymbol,
-                                        title: beneficiary.country.currencySymbol,
+                                        id: asset.assetName,
+                                        title: asset.assetName,
                                     },
                                     {
-                                        id: asset.assetName,
-                                        title: asset.assetNetwork,
+                                        id: beneficiary.country.currencySymbol,
+                                        title: beneficiary.country.currencySymbol,
                                     },
                                 ],
                                 user_balance: userBalanceMessage,
                                 conversion_rate: params.fiatConversionRate.toString(),
                                 fee: params.transactionFee.toString(),
+                                init_values: {
+                                    amount_denomination: asset.assetName,
+                                },
                             } satisfies AmountInputScreenData,
                         },
                     },
