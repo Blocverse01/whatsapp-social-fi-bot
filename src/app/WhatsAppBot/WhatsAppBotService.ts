@@ -344,17 +344,23 @@ class WhatsAppBotService {
     }) {
         const { assetId, beneficiaryId, recipient, businessPhoneNumberId } = params;
 
-        const asset = getAssetConfigOrThrow(assetId);
-        const beneficiary = await FiatRampService.getBeneficiary(beneficiaryId);
+        const [asset, beneficiary] = await Promise.all([
+            UserService.getUserAssetInfo(recipient, assetId),
+            FiatRampService.getBeneficiary(beneficiaryId),
+        ]);
 
-        if (!asset) {
-            throw new Error('Invalid asset');
-        }
+        const { rate, fee } = await FiatRampService.getQuotes(
+            beneficiary.country.currencySymbol,
+            beneficiary.country.code as CountryCode,
+            'offramp'
+        );
 
         const flowMessage = WhatsAppBotOffRampFlowService.generateOffRampFlowInitMessage({
             asset,
             beneficiary,
             recipient,
+            fiatConversionRate: rate,
+            transactionFee: fee,
         });
 
         await this.sendWhatsappMessage(businessPhoneNumberId, flowMessage);

@@ -16,9 +16,12 @@ import FiatRampService from '@/app/FiatRamp/FiatRampService';
 import { CountryCode } from 'libphonenumber-js';
 import UserService from '@/app/User/UserService';
 import { logServiceError } from '@/Resources/requestHelpers/handleRequestError';
-import { isAddress } from 'viem';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
-import { generateOnrampTransactionInitiatedMessage } from '@/Resources/utils/bot-message-utils';
+import {
+    generateOnrampTransactionInitiatedMessage,
+    generateOnrampTransactionInitiatedWithMomoPaymentMessage,
+} from '@/Resources/utils/bot-message-utils';
+import { validateWalletAddress } from '@/Resources/utils/validators';
 
 enum OnRampFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -40,6 +43,12 @@ type ScreenPayload = {
         country_code: string;
         init_values: {
             payment_method: string;
+            wallet_address?: string;
+            amount?: string;
+        };
+        error_messages?: {
+            wallet_address?: string;
+            amount?: string;
         };
     };
     TRANSACTION_SUMMARY: {
@@ -253,6 +262,38 @@ class WhatsAppBotOnRampFlowService {
 
         const assetConfig = getAssetConfigOrThrow(asset_id);
 
+        const errorMessages: ScreenPayload['TRANSACTION_DETAILS']['error_messages'] = {};
+        if (wallet_address && !validateWalletAddress(wallet_address, assetConfig.network)) {
+            errorMessages.wallet_address = 'Invalid wallet address';
+        }
+
+        if (!amount.trim()) {
+            errorMessages.amount = 'Amount is required';
+        }
+
+        if (Object.keys(errorMessages).length > 0) {
+            const assetLabel = `${assetConfig.tokenName} (${assetConfig.network})`;
+
+            return {
+                screen: OnRampFlowScreens.TRANSACTION_DETAILS,
+                data: {
+                    dynamic_page_title: `Buy ${assetLabel} with ${local_currency}`,
+                    payment_methods,
+                    asset_label: `${assetLabel}`,
+                    asset_id,
+                    user_id,
+                    local_currency,
+                    country_code,
+                    init_values: {
+                        payment_method,
+                        wallet_address,
+                        amount,
+                    },
+                    error_messages: errorMessages,
+                } satisfies ScreenPayload['TRANSACTION_DETAILS'],
+            };
+        }
+
         const { rate: conversionRate, fee } = await FiatRampService.getQuotes(
             local_currency,
             country_code as CountryCode,
@@ -360,7 +401,12 @@ class WhatsAppBotOnRampFlowService {
                         };
                     }
 
-                    if (!isAddress(transaction_details.external_wallet_address)) {
+                    if (
+                        !validateWalletAddress(
+                            transaction_details.external_wallet_address,
+                            getAssetConfigOrThrow(asset_id).network
+                        )
+                    ) {
                         return {
                             screen: OnRampFlowScreens.ERROR_FEEDBACK,
                             data: {
@@ -540,7 +586,12 @@ class WhatsAppBotOnRampFlowService {
                 };
             }
 
-            if (!isAddress(transaction_details.external_wallet_address)) {
+            if (
+                !validateWalletAddress(
+                    transaction_details.external_wallet_address,
+                    getAssetConfigOrThrow(asset_id).network
+                )
+            ) {
                 return {
                     screen: OnRampFlowScreens.ERROR_FEEDBACK,
                     data: {
@@ -554,9 +605,10 @@ class WhatsAppBotOnRampFlowService {
         }
 
         try {
-            const assetWallet = await UserService.getUserAssetWalletOrThrow(user_id, asset_id);
-
-            const verifiedUserDetails = await UserService.getUserIdentityInfo(user_id);
+            const [assetWallet, verifiedUserDetails] = await Promise.all([
+                UserService.getUserAssetWalletOrThrow(user_id, asset_id),
+                UserService.getUserIdentityInfo(user_id),
+            ]);
 
             if (!verifiedUserDetails) {
                 return {
@@ -585,9 +637,22 @@ class WhatsAppBotOnRampFlowService {
                 tokenName: assetWallet.name,
             });
 
-            const message = `Your transaction with the following details:\n\n💲 Buy ${transaction_details.token_amount} ${assetWallet.name} on ${assetWallet.network} for ${formatNumberAsCurrency(parseFloat(transaction_details.fiat_to_pay), local_currency)} has been initiated\n\nPlease follow the instructions on your phone to complete the transaction`;
+            const message = generateOnrampTransactionInitiatedWithMomoPaymentMessage({
+                tokenAmount: transaction_details.token_amount,
+                assetName: assetWallet.name,
+                assetNetwork: assetWallet.network,
+                fiatToPay: transaction_details.fiat_to_pay,
+                localCurrency: local_currency,
+                momoDetails: {
+                    accountName: verifiedUserDetails.firstName + ' ' + verifiedUserDetails.lastName,
+                    accountNumber: mobile_number,
+                    bankName: mobile_provider,
+                },
+            });
 
-            await WhatsAppBotService.sendArbitraryTextMessage(user_id, message);
+            WhatsAppBotService.sendArbitraryTextMessage(user_id, message).then(() =>
+                console.log('WhatsApp message sent')
+            );
 
             return {
                 screen: OnRampFlowScreens.PROCESSING_FEEDBACK,

@@ -19,7 +19,7 @@ import MessageGenerators from '@/app/WhatsAppBot/MessageGenerators';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
 import env from '@/constants/env';
 import { type FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
-import { isAddress } from 'viem';
+import { validateWalletAddress } from '@/Resources/utils/validators';
 
 enum TransferToWalletFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -34,6 +34,14 @@ type ScreenDataPayload = {
         asset_id: string;
         user_id: string;
         user_balance: string;
+        init_values?: {
+            wallet_address: string;
+            amount: string;
+        };
+        error_messages?: {
+            wallet_address?: string;
+            amount?: string;
+        };
     };
     TRANSACTION_SUMMARY: {
         amount: string;
@@ -56,6 +64,7 @@ type DataExchangePayload = {
         asset_id: string;
         user_id: string;
         wallet_address: string;
+        user_balance: string;
     };
     TRANSACTION_SUMMARY: {
         amount: string;
@@ -72,6 +81,7 @@ class WhatsAppBotTransferToWalletFlowService {
     private static FLOW_MODE: FlowMode = 'draft';
     private static FLOW_ID = '464881709776668';
     private static INITIAL_SCREEN = TransferToWalletFlowScreens.TRANSACTION_DETAILS;
+    private static readonly USER_BALANCE_PATTERN = /Your balance: (\d+\.\d+) (\w+)/;
 
     public static async receiveDataExchange(
         requestBody: DecryptedFlowDataExchange['decryptedBody']
@@ -126,13 +136,46 @@ class WhatsAppBotTransferToWalletFlowService {
                 asset.network
             );
 
+        const assetLabel = `${asset.tokenName} (${asset.network})`;
+
+        const userBalanceMatch = data.user_balance.match(this.USER_BALANCE_PATTERN);
+        const userBalance = userBalanceMatch ? parseFloat(userBalanceMatch[1]) : 0;
+        const amount = parseFloat(data.amount);
+
+        const errorMessages: ScreenDataPayload['TRANSACTION_DETAILS']['error_messages'] = {};
+
+        if (userBalance < amount) {
+            errorMessages.amount = `Insufficient balance, you have only ${userBalance} ${asset.tokenName}`;
+        }
+        if (!validateWalletAddress(data.wallet_address, asset.network)) {
+            errorMessages.wallet_address = 'Invalid wallet address';
+        }
+
+        if (Object.keys(errorMessages).length > 0) {
+            return {
+                screen: TransferToWalletFlowScreens.TRANSACTION_DETAILS,
+                data: {
+                    error_messages: errorMessages,
+                    asset_id: data.asset_id,
+                    dynamic_page_title: `Withdraw ${assetLabel}`,
+                    asset_label: assetLabel,
+                    user_id: data.user_id,
+                    user_balance: data.user_balance,
+                    init_values: {
+                        wallet_address: data.wallet_address,
+                        amount: data.amount,
+                    },
+                } satisfies ScreenDataPayload['TRANSACTION_DETAILS'],
+            };
+        }
+
         return {
             screen: TransferToWalletFlowScreens.TRANSACTION_SUMMARY,
             data: {
                 ...data,
                 transaction_fee: decimalToString(transactionFee),
                 asset_label: `${asset.tokenName} (${asset.network})`,
-            } as ScreenDataPayload['TRANSACTION_SUMMARY'],
+            } satisfies ScreenDataPayload['TRANSACTION_SUMMARY'],
         };
     }
 
@@ -146,13 +189,11 @@ class WhatsAppBotTransferToWalletFlowService {
             ? fixNumber(amount + transactionFee, TWO)
             : amount;
 
-        if (assetBalance < totalAmount) {
-            const insufficientBalanceMessage = `You're trying to pay: ${totalAmount} ${walletInfo.assetName}\nYou have only: ${assetBalance} ${walletInfo.assetName}`;
-
+        if (!validateWalletAddress(data.wallet_address, walletInfo.assetNetwork)) {
             return {
                 screen: TransferToWalletFlowScreens.ERROR_FEEDBACK,
                 data: {
-                    message: insufficientBalanceMessage,
+                    message: 'Invalid wallet address',
                     status: 'failed',
                     asset_id: data.asset_id,
                     is_transfer_transaction: true,
@@ -160,11 +201,13 @@ class WhatsAppBotTransferToWalletFlowService {
             };
         }
 
-        if (!isAddress(data.wallet_address)) {
+        if (assetBalance < totalAmount) {
+            const insufficientBalanceMessage = `You're trying to pay: ${totalAmount} ${walletInfo.assetName}\nYou have only: ${assetBalance} ${walletInfo.assetName}`;
+
             return {
                 screen: TransferToWalletFlowScreens.ERROR_FEEDBACK,
                 data: {
-                    message: 'Invalid wallet address',
+                    message: insufficientBalanceMessage,
                     status: 'failed',
                     asset_id: data.asset_id,
                     is_transfer_transaction: true,
@@ -277,7 +320,13 @@ class WhatsAppBotTransferToWalletFlowService {
 
         const assetLabel = `${asset.assetName} (${asset.assetNetwork})`;
 
-        const transferMessage = `Transfer ${assetLabel}`;
+        const transferMessage = `Withdraw ${assetLabel}`;
+
+        const userBalanceMessage = `Your balance: ${asset.tokenBalance} ${asset.assetName}`;
+
+        if (!userBalanceMessage.match(this.USER_BALANCE_PATTERN)) {
+            throw new Error('User balance message does not match pattern');
+        }
 
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
@@ -293,7 +342,7 @@ class WhatsAppBotTransferToWalletFlowService {
                         flow_token: generateRandomHexString(SIXTEEN),
                         flow_id: this.FLOW_ID,
                         mode: this.FLOW_MODE,
-                        flow_cta: 'Transfer Asset',
+                        flow_cta: 'Withdraw Asset',
                         flow_action: 'navigate',
                         flow_action_payload: {
                             screen: this.INITIAL_SCREEN,
