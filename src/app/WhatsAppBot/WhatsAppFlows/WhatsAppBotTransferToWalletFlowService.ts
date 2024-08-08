@@ -144,6 +144,9 @@ class WhatsAppBotTransferToWalletFlowService {
 
         const errorMessages: ScreenDataPayload['TRANSACTION_DETAILS']['error_messages'] = {};
 
+        if (amount <= 0) {
+            errorMessages.amount = 'Amount must be greater than 0';
+        }
         if (userBalance < amount) {
             errorMessages.amount = `Insufficient balance, you have only ${userBalance} ${asset.tokenName}`;
         }
