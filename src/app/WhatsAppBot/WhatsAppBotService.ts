@@ -407,7 +407,7 @@ class WhatsAppBotService {
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,
             text: {
-                body: `Conversion Rates\n\n${rates.map((rate) => `-------------------\n${getCountryFlagEmoji(rate.locale)} ${rate.code}/USD\nBuy: ${rate.buy}\nSell: ${rate.sell}\n-------------------`).join('\n\n')}`,
+                body: `_*Conversion Rates*_\n\n${rates.map((rate) => `${getCountryFlagEmoji(rate.locale)} ${rate.code}/USD\nBuy: ${rate.buy}\nSell: ${rate.sell}\n-------------------`).join('\n')}`,
                 preview_url: false,
             },
             messaging_product: 'whatsapp',
