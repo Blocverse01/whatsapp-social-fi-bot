@@ -21,8 +21,8 @@ const flowConfigs: FlowConfigs = {
             flowMode: 'draft',
         },
         [PHONE_NUMBER_IDS.AMARA_FROM_AZZA_PHONE_NUMBER_ID]: {
-            flowId: '',
-            flowMode: 'draft',
+            flowId: '1207890117023139',
+            flowMode: 'published',
         },
     },
     OFFRAMP: {
@@ -31,8 +31,8 @@ const flowConfigs: FlowConfigs = {
             flowMode: 'draft',
         },
         [PHONE_NUMBER_IDS.AMARA_FROM_AZZA_PHONE_NUMBER_ID]: {
-            flowId: '',
-            flowMode: 'draft',
+            flowId: '1558631018412295',
+            flowMode: 'published',
         },
     },
     TRANSFER: {
@@ -41,8 +41,8 @@ const flowConfigs: FlowConfigs = {
             flowMode: 'draft',
         },
         [PHONE_NUMBER_IDS.AMARA_FROM_AZZA_PHONE_NUMBER_ID]: {
-            flowId: '',
-            flowMode: 'draft',
+            flowId: '1278133129822622',
+            flowMode: 'published',
         },
     },
     ADD_BENEFICIARY: {
@@ -51,8 +51,8 @@ const flowConfigs: FlowConfigs = {
             flowMode: 'published',
         },
         [PHONE_NUMBER_IDS.AMARA_FROM_AZZA_PHONE_NUMBER_ID]: {
-            flowId: '',
-            flowMode: 'draft',
+            flowId: '409232385504910',
+            flowMode: 'published',
         },
     },
 };
