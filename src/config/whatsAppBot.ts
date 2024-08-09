@@ -29,8 +29,3 @@ export const getAssetConfigOrThrow = (listItemId: string): AssetConfig => {
 
     return assetConfig;
 };
-
-export enum PHONE_NUMBER_IDS {
-    TEST_PHONE_NUMBER_ID = '374388925747676',
-    AMARA_FROM_AZZA_PHONE_NUMBER_ID = '353245737877068',
-}

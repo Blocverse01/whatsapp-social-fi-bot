@@ -1,4 +1,4 @@
-import { PHONE_NUMBER_IDS } from '@/config/whatsAppBot';
+import { PHONE_NUMBER_IDS } from '@/config/whatsAppPhoneNumbers';
 import { FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
 
 type PhoneNumberId = (typeof PHONE_NUMBER_IDS)[keyof typeof PHONE_NUMBER_IDS];

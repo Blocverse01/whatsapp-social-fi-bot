@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import 'dotenv/config';
-import { PHONE_NUMBER_IDS } from '@/config/whatsAppBot';
+import { PHONE_NUMBER_IDS } from '@/config/whatsAppPhoneNumbers';
 
 const notEmptyStringSchema = (variableName: string) =>
     z.string().refine((val) => val.trim() !== '', {
