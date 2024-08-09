@@ -393,10 +393,21 @@ class WhatsAppBotService {
     ) {
         const rates = await FiatRampService.getAllRates();
 
+        const userCountryCode = getUserCountryCodeFromPhoneNumber(userPhoneNumber);
+        const userCountry = rates.find(
+            (rate) => rate.locale.toLowerCase() === userCountryCode.toLowerCase()
+        );
+        const userCountryIndex = userCountry ? rates.indexOf(userCountry) : undefined;
+
+        if (userCountryIndex !== undefined && userCountryIndex >= 0 && userCountry) {
+            rates.splice(userCountryIndex, 1);
+            rates.unshift(userCountry);
+        }
+
         const messagePayload: WhatsAppTextMessage = {
             type: WhatsAppMessageType.TEXT,
             text: {
-                body: `Conversion Rates\n\n${rates.map((rate) => `==================\n${rate.code}/USD\nBuy: ${rate.buy}\nSell: ${rate.sell}`).join('\n\n')}`,
+                body: `Conversion Rates\n\n${rates.map((rate) => `-------------------\n${getCountryFlagEmoji(rate.locale)} ${rate.code}/USD\nBuy: ${rate.buy}\nSell: ${rate.sell}\n-------------------`).join('\n\n')}`,
                 preview_url: false,
             },
             messaging_product: 'whatsapp',
