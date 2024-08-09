@@ -26,6 +26,8 @@ import {
     generateOnrampTransactionInitiatedWithMomoPaymentMessage,
 } from '@/Resources/utils/bot-message-utils';
 import { validateWalletAddress } from '@/Resources/utils/validators';
+import { getFlowConfig } from '@/app/WhatsAppBot/WhatsAppFlows/config';
+import env from '@/constants/env';
 
 enum OnRampFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -157,9 +159,11 @@ type FiatToPayPattern = `${string}\n---------------------------------\n1 ${Token
 
 const SECTION_SEPARATOR = '\n---------------------------------\n' as const;
 
+const flowConfig = getFlowConfig('ONRAMP', env.WA_PHONE_NUMBER_ID);
+
 class WhatsAppBotOnRampFlowService {
-    private static readonly FLOW_MODE: FlowMode = 'draft';
-    private static readonly FLOW_ID = '457607423727887';
+    private static readonly FLOW_MODE: FlowMode = flowConfig.flowMode;
+    private static readonly FLOW_ID = flowConfig.flowId;
     private static readonly INITIAL_SCREEN = OnRampFlowScreens.TRANSACTION_DETAILS;
 
     public static async receiveDataExchange(

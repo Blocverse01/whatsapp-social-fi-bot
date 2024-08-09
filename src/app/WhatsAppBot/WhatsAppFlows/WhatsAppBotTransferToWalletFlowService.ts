@@ -20,6 +20,7 @@ import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
 import env from '@/constants/env';
 import { type FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/types';
 import { validateWalletAddress } from '@/Resources/utils/validators';
+import { getFlowConfig } from '@/app/WhatsAppBot/WhatsAppFlows/config';
 
 enum TransferToWalletFlowScreens {
     TRANSACTION_DETAILS = 'TRANSACTION_DETAILS',
@@ -77,9 +78,11 @@ type DataExchangePayload = {
 
 const BACKGROUND_PROCESSES_SCRIPTS_FOLDER = path.join(__dirname, 'backgroundProcesses');
 
+const flowConfig = getFlowConfig('TRANSFER', env.WA_PHONE_NUMBER_ID);
+
 class WhatsAppBotTransferToWalletFlowService {
-    private static FLOW_MODE: FlowMode = 'draft';
-    private static FLOW_ID = '464881709776668';
+    private static FLOW_MODE: FlowMode = flowConfig.flowMode;
+    private static FLOW_ID = flowConfig.flowId;
     private static INITIAL_SCREEN = TransferToWalletFlowScreens.TRANSACTION_DETAILS;
     private static readonly USER_BALANCE_PATTERN = /Your balance: (\d+\.\d+) (\w+)/;
 

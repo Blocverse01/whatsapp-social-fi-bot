@@ -31,6 +31,8 @@ import { DropdownOption, type FlowMode } from '@/app/WhatsAppBot/WhatsAppFlows/t
 import { UserAssetInfo } from '@/app/User/userSchema';
 import { generateOfframpProcessingMessage } from '@/Resources/utils/bot-message-utils';
 import WhatsAppBotService from '@/app/WhatsAppBot/WhatsAppBotService';
+import { getFlowConfig } from '@/app/WhatsAppBot/WhatsAppFlows/config';
+import env from '@/constants/env';
 
 enum OffRampFlowScreens {
     AMOUNT_INPUT = 'AMOUNT_INPUT',
@@ -103,9 +105,11 @@ type ProcessOffRampTransactionResponse = {
 
 const BACKGROUND_PROCESSES_SCRIPTS_FOLDER = path.join(__dirname, 'backgroundProcesses');
 
+const flowConfig = getFlowConfig('OFFRAMP', env.WA_PHONE_NUMBER_ID);
+
 class WhatsAppBotOffRampFlowService {
-    private static FLOW_MODE: FlowMode = 'draft';
-    private static FLOW_ID = '1011245846972252';
+    private static FLOW_MODE: FlowMode = flowConfig.flowMode;
+    private static FLOW_ID = flowConfig.flowId;
     private static INITIAL_SCREEN = OffRampFlowScreens.AMOUNT_INPUT;
 
     public static async receiveDataExchange(

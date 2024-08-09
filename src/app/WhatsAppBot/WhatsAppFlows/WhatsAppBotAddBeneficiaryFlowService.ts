@@ -11,6 +11,8 @@ import { CountryCode } from 'libphonenumber-js';
 import { parseUnknownError } from '@/Resources/requestHelpers/handleRequestError';
 import { generateRandomHexString } from '@/Resources/utils/encryption';
 import { SIXTEEN } from '@/constants/numbers';
+import { getFlowConfig } from '@/app/WhatsAppBot/WhatsAppFlows/config';
+import env from '@/constants/env';
 
 enum AddBeneficiaryFlowScreens {
     ACCOUNT_TYPE = 'ACCOUNT_TYPE',
@@ -87,9 +89,11 @@ type DataExchangePayload = {
     };
 };
 
+const flowConfig = getFlowConfig('ADD_BENEFICIARY', env.WA_PHONE_NUMBER_ID);
+
 class WhatsAppBotAddBeneficiaryFlowService {
-    private static FLOW_MODE: FlowMode = 'published';
-    public static readonly FLOW_ID = '482861261039877';
+    private static FLOW_MODE: FlowMode = flowConfig.flowMode;
+    public static readonly FLOW_ID = flowConfig.flowId;
     private static INITIAL_SCREEN = AddBeneficiaryFlowScreens.ACCOUNT_TYPE;
 
     public static async receiveDataExchange(

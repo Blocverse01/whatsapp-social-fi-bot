@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import 'dotenv/config';
+import { PHONE_NUMBER_IDS } from '@/config/whatsAppBot';
 
 const notEmptyStringSchema = (variableName: string) =>
     z.string().refine((val) => val.trim() !== '', {
@@ -40,7 +41,9 @@ const envSchema = z.object({
     CDP_KEY_NAME: notEmptyStringSchema('CDP_KEY_NAME'),
     CDP_KEY_SECRET: notEmptyStringSchema('CDP_KEY_SECRET'),
     CDP_PROJECT_ID: notEmptyStringSchema('CDP_PROJECT_ID'),
-    WA_PHONE_NUMBER_ID: notEmptyStringSchema('WA_PHONE_NUMBER_ID'),
+    WA_PHONE_NUMBER_ID: notEmptyStringSchema('WA_PHONE_NUMBER_ID').and(
+        z.nativeEnum(PHONE_NUMBER_IDS)
+    ),
     WA_FLOW_PRIVATE_KEY: notEmptyStringSchema('WA_FLOW_PRIVATE_KEY'),
     WA_FLOW_PRIVATE_KEY_SEED_PHRASE: notEmptyStringSchema('WA_FLOW_PRIVATE_KEY_SEED_PHRASE'),
     TRANSACTION_FEE_RECIPIENT: notEmptyStringSchema('TRANSACTION_FEE_RECIPIENT'),
