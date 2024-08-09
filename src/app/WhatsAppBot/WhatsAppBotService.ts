@@ -51,6 +51,7 @@ import { HttpException } from '@/Resources/exceptions/HttpException';
 import { INTERNAL_SERVER_ERROR } from '@/constants/status-codes';
 import WhatsAppBotTransferToWalletFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotTransferToWalletFlowService';
 import WhatsAppBotOnRampFlowService from '@/app/WhatsAppBot/WhatsAppFlows/WhatsAppBotOnRampFlowService';
+import { getCountryFlagEmoji, getUserCountryCodeFromPhoneNumber } from '@/Resources/utils/currency';
 
 type PhoneNumberParams = { userPhoneNumber: string; businessPhoneNumberId: string };
 
@@ -600,7 +601,21 @@ class WhatsAppBotService {
     ) {
         const { userPhoneNumber, businessPhoneNumberId } = phoneParams;
 
+        const userCountryCode = getUserCountryCodeFromPhoneNumber(userPhoneNumber);
         const supportedCurrencies = await FiatRampService.getSupportedCurrencies();
+
+        const userCountry = supportedCurrencies.find(
+            (country) => country.code.toLowerCase() === userCountryCode.toLowerCase()
+        );
+        const userCountryIndex = userCountry ? supportedCurrencies.indexOf(userCountry) : undefined;
+
+        const userCountryIsSupported = userCountryIndex !== undefined && userCountryIndex >= 0;
+
+        // If the user's country is supported, move it to the beginning of the array
+        if (userCountryIsSupported && userCountry) {
+            supportedCurrencies.splice(userCountryIndex, 1);
+            supportedCurrencies.unshift(userCountry);
+        }
 
         // determine sliceFrom considering _sliceFrom and the available indexes of the array
         const sliceFrom = Math.min(_sliceFrom, supportedCurrencies.length - 1);
@@ -622,16 +637,18 @@ class WhatsAppBotService {
 
         const countriesToDisplay = supportedCurrencies.slice(sliceFrom, sliceTo);
 
+        const page = Math.floor(sliceFrom / 9) + 1;
+
         const interactiveMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
             interactive: {
                 type: 'list',
                 body: {
-                    text: 'Select your local currency',
+                    text: "Click on 'Currencies' to select your local currency.",
                 },
                 header: {
                     type: 'text',
-                    text: 'Choose a Currency',
+                    text: `Select Your Local Currency - Page ${page}`,
                 },
                 action: {
                     button: 'Currencies',
@@ -641,7 +658,7 @@ class WhatsAppBotService {
                                 ...countriesToDisplay.map((country) => {
                                     return {
                                         id: `${assetActionId}:${purchaseAssetId}|currency:${country.currencySymbol}|countryCode:${country.code}`,
-                                        title: country.country,
+                                        title: `${getCountryFlagEmoji(country.code)} ${country.country}`,
                                         description: `Currency: ${country.currencySymbol}`,
                                     };
                                 }),

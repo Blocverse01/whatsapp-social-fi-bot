@@ -15,6 +15,7 @@ import {
     defaultAmountFixer,
     fixNumber,
     formatNumberAsCurrency,
+    getCountryFlagEmoji,
     prettifyNumber,
 } from '@/Resources/utils/currency';
 import UserService from '@/app/User/UserService';
@@ -400,7 +401,7 @@ class WhatsAppBotOffRampFlowService {
         const beneficiaryProvider =
             'bankName' in beneficiary ? beneficiary.bankName : beneficiary.mobileProvider;
 
-        const sellMessage = `Sell ${assetLabel} for ${beneficiary.country.currencySymbol}`;
+        const sellMessage = `Sell ${assetLabel} for ${getCountryFlagEmoji(beneficiary.country.code)} ${beneficiary.country.currencySymbol}`;
 
         const userBalance = parseFloat(asset.tokenBalance);
         const userBalanceFormatted = prettifyNumber(userBalance) + ' ' + asset.assetName;

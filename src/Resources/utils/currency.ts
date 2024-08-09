@@ -1,4 +1,5 @@
 import { TEN, TWO } from '@/constants/numbers';
+import { parsePhoneNumber } from 'libphonenumber-js';
 
 export const formatNumberAsCurrency = (number: number, currency: string): string => {
     const formatter = new Intl.NumberFormat('en-US', {
@@ -26,4 +27,19 @@ export const defaultAmountFixer = (number: number): number => fixNumber(number, 
 // Convert a decimal number to a string, ensuring that the radix is 10
 export const decimalToString = (number: number): string => {
     return number.toString(TEN);
+};
+
+export const getCountryFlagEmoji = (countryCode: string): string => {
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map((char) => char.charCodeAt(0) + 127397);
+
+    return String.fromCodePoint(...codePoints);
+};
+
+export const getUserCountryCodeFromPhoneNumber = (phoneNumber: string): string => {
+    const phoneNumberObj = parsePhoneNumber(`+${phoneNumber}`);
+
+    return phoneNumberObj.country!;
 };

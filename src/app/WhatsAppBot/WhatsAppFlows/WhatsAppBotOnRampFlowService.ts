@@ -9,7 +9,11 @@ import {
 import { generateRandomHexString } from '@/Resources/utils/encryption';
 import { SIXTEEN } from '@/constants/numbers';
 import logger from '@/Resources/logger';
-import { defaultAmountFixer, formatNumberAsCurrency } from '@/Resources/utils/currency';
+import {
+    defaultAmountFixer,
+    formatNumberAsCurrency,
+    getCountryFlagEmoji,
+} from '@/Resources/utils/currency';
 import { SupportedChain } from '@/app/WalletKit/walletKitSchema';
 import { getAssetConfigOrThrow } from '@/config/whatsAppBot';
 import FiatRampService from '@/app/FiatRamp/FiatRampService';
@@ -278,7 +282,7 @@ class WhatsAppBotOnRampFlowService {
             return {
                 screen: OnRampFlowScreens.TRANSACTION_DETAILS,
                 data: {
-                    dynamic_page_title: `Buy ${assetLabel} with ${local_currency}`,
+                    dynamic_page_title: `Buy ${assetLabel} with ${getCountryFlagEmoji(country_code)} ${local_currency}`,
                     payment_methods,
                     asset_label: `${assetLabel}`,
                     asset_id,
@@ -694,7 +698,7 @@ class WhatsAppBotOnRampFlowService {
         const { asset, localCurrency, recipient, paymentMethods, countryCode } = params;
 
         const assetLabel = `${asset.tokenName} (${asset.network})`;
-        const buyMessage = `Buy ${assetLabel} with ${localCurrency}`;
+        const buyMessage = `Buy ${assetLabel} with ${getCountryFlagEmoji(countryCode)} ${localCurrency}`;
 
         const flowMessage: WhatsAppInteractiveMessage = {
             type: 'interactive',
