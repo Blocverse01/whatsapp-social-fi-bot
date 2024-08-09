@@ -187,7 +187,7 @@ class WhatsAppBotController {
 
         // ============== HANDLE TEXT MESSAGES ============== //
         if (type === WhatsAppMessageType.TEXT) {
-            if (text.body.toLowerCase() === RATES_COMMAND) {
+            if (text.body.toLowerCase().includes(RATES_COMMAND)) {
                 await WhatsAppBotService.ratesCommandHandler(from, businessPhoneNumberId);
                 return;
             }
